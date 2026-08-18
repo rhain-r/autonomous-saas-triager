@@ -10,6 +10,7 @@ project as a side effect of running a demo is not a default anybody wants.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -43,7 +44,11 @@ class FileSink:
     def create(self, issue: JiraIssue) -> TrackerReceipt:
         self._dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        key = f"{issue.project}-{abs(hash(issue.source_ticket)) % 9000 + 1000}"
+        # A stable digest rather than hash(), which Python randomises per process:
+        # the same ticket must produce the same issue key on every run, or a
+        # receipt means nothing and the eval stops being reproducible.
+        digest = hashlib.sha256(issue.source_ticket.encode("utf-8")).hexdigest()
+        key = f"{issue.project}-{int(digest[:8], 16) % 9000 + 1000}"
         path = self._dir / f"{key}-{stamp}.json"
         path.write_text(
             json.dumps(

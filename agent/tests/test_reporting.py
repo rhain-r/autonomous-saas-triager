@@ -132,6 +132,15 @@ def test_the_file_sink_writes_the_payload_a_real_call_would_carry(settings, tmp_
     assert written["fields"]["source_ticket"] == ticket.ticket_id
 
 
+def test_the_same_ticket_always_gets_the_same_issue_key(settings, tmp_path, ticket):
+    """An earlier version used hash(), which Python randomises per process, so a
+    receipt pointed at a different issue on every run."""
+    issue = build_jira_issue(ticket, _diagnosis(), None, settings)
+    keys = {FileSink(tmp_path / f"run{i}").create(issue).issue_key for i in range(3)}
+    assert len(keys) == 1
+    assert keys.pop().startswith(f"{settings.jira_project}-")
+
+
 def test_live_escalation_without_a_token_refuses_rather_than_dropping_it(settings):
     with pytest.raises(RuntimeError, match="refusing to silently drop"):
         build_sink(settings, live=True)
