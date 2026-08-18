@@ -1,0 +1,14 @@
+ticket_id: TCK-9302
+intent: bug
+disposition: escalate
+root_cause_paths: [src/api/client.ts]
+related_paths: []
+trap: misattribution
+notes: >
+  request() retries 429s immediately, with no delay and no jitter, so a single
+  rate-limited burst replays eight times inside the same fixed window and
+  exhausts the next one too. The customer blames the rate limiter and
+  src/api/rate_limit.ts is the obvious-looking culprit — but it is correct, and
+  citing it sends a developer to the wrong file. This ticket measures
+  attribution, not detection: escalating it is easy, escalating it with the
+  right file is not.

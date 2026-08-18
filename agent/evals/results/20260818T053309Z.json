@@ -1,0 +1,525 @@
+{
+  "generated_at": "2026-08-18T05:33:09.346800+00:00",
+  "tickets": 8,
+  "note": "Produced with deterministic lexical stand-ins, not language models. These numbers measure pipeline behaviour — the evidence gate, the challenge routing, the patch gate — and say nothing about model accuracy. No API key was used.",
+  "configurations": [
+    {
+      "label": "keyword-only classifier, unguarded close",
+      "tickets": 8,
+      "precision": 0.667,
+      "recall": 0.5,
+      "f1": 0.571,
+      "true_positives": 2,
+      "false_positives": 1,
+      "false_negatives": 2,
+      "silent_closures": 2,
+      "contained": 0,
+      "disposition_accuracy": 0.625,
+      "attribution_correct": 1,
+      "attribution_scored": 2,
+      "overturns": 0,
+      "correct_overturns": 0,
+      "fabrications": 0
+    },
+    {
+      "label": "keyword-only classifier, + challenger",
+      "tickets": 8,
+      "precision": 0.75,
+      "recall": 0.75,
+      "f1": 0.75,
+      "true_positives": 3,
+      "false_positives": 1,
+      "false_negatives": 1,
+      "silent_closures": 1,
+      "contained": 0,
+      "disposition_accuracy": 0.75,
+      "attribution_correct": 2,
+      "attribution_scored": 3,
+      "overturns": 1,
+      "correct_overturns": 1,
+      "fabrications": 0
+    },
+    {
+      "label": "signal-aware classifier, unguarded close",
+      "tickets": 8,
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1": 0.889,
+      "true_positives": 4,
+      "false_positives": 1,
+      "false_negatives": 0,
+      "silent_closures": 0,
+      "contained": 0,
+      "disposition_accuracy": 0.875,
+      "attribution_correct": 2,
+      "attribution_scored": 4,
+      "overturns": 0,
+      "correct_overturns": 0,
+      "fabrications": 0
+    },
+    {
+      "label": "signal-aware classifier, + challenger",
+      "tickets": 8,
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1": 0.889,
+      "true_positives": 4,
+      "false_positives": 1,
+      "false_negatives": 0,
+      "silent_closures": 0,
+      "contained": 0,
+      "disposition_accuracy": 0.875,
+      "attribution_correct": 2,
+      "attribution_scored": 4,
+      "overturns": 0,
+      "correct_overturns": 0,
+      "fabrications": 0
+    }
+  ],
+  "per_ticket": [
+    {
+      "configuration": "keyword-only classifier, unguarded close",
+      "outcomes": [
+        {
+          "ticket_id": "TCK-3021",
+          "trap": null,
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/auth/config.ts"
+          ],
+          "attribution": "correct",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-1102",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "how_to",
+          "actual_intent": "how_to",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-4488",
+          "trap": "single-account defect",
+          "expected": "escalate",
+          "actual": "resolve",
+          "expected_intent": "bug",
+          "actual_intent": "user_error",
+          "cited_paths": [
+            "src/billing/ledger.ts"
+          ],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": true
+        },
+        {
+          "ticket_id": "TCK-5210",
+          "trap": "false escalation",
+          "expected": "resolve",
+          "actual": "escalate",
+          "expected_intent": "user_error",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/exports/uploader.ts"
+          ],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-6033",
+          "trap": "silent closure",
+          "expected": "escalate",
+          "actual": "resolve",
+          "expected_intent": "bug",
+          "actual_intent": "user_error",
+          "cited_paths": [
+            "src/auth/reset.ts"
+          ],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": true
+        },
+        {
+          "ticket_id": "TCK-9302",
+          "trap": "misattribution",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/api/rate_limit.ts"
+          ],
+          "attribution": "wrong",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-7714",
+          "trap": "no evidence exists",
+          "expected": "needs_human",
+          "actual": "needs_human",
+          "expected_intent": "user_error",
+          "actual_intent": "user_error",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-8890",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "feature_request",
+          "actual_intent": "feature_request",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        }
+      ]
+    },
+    {
+      "configuration": "keyword-only classifier, + challenger",
+      "outcomes": [
+        {
+          "ticket_id": "TCK-3021",
+          "trap": null,
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/auth/config.ts"
+          ],
+          "attribution": "correct",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-1102",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "how_to",
+          "actual_intent": "how_to",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-4488",
+          "trap": "single-account defect",
+          "expected": "escalate",
+          "actual": "resolve",
+          "expected_intent": "bug",
+          "actual_intent": "user_error",
+          "cited_paths": [
+            "src/billing/ledger.ts"
+          ],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": true
+        },
+        {
+          "ticket_id": "TCK-5210",
+          "trap": "false escalation",
+          "expected": "resolve",
+          "actual": "escalate",
+          "expected_intent": "user_error",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/exports/uploader.ts"
+          ],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-6033",
+          "trap": "silent closure",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/auth/reset.ts"
+          ],
+          "attribution": "correct",
+          "overturned": true,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-9302",
+          "trap": "misattribution",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/api/rate_limit.ts"
+          ],
+          "attribution": "wrong",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-7714",
+          "trap": "no evidence exists",
+          "expected": "needs_human",
+          "actual": "needs_human",
+          "expected_intent": "user_error",
+          "actual_intent": "user_error",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-8890",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "feature_request",
+          "actual_intent": "feature_request",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        }
+      ]
+    },
+    {
+      "configuration": "signal-aware classifier, unguarded close",
+      "outcomes": [
+        {
+          "ticket_id": "TCK-3021",
+          "trap": null,
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/auth/config.ts"
+          ],
+          "attribution": "correct",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-1102",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "how_to",
+          "actual_intent": "how_to",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-4488",
+          "trap": "single-account defect",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/billing/ledger.ts"
+          ],
+          "attribution": "related",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-5210",
+          "trap": "false escalation",
+          "expected": "resolve",
+          "actual": "escalate",
+          "expected_intent": "user_error",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/exports/uploader.ts"
+          ],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-6033",
+          "trap": "silent closure",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/auth/reset.ts"
+          ],
+          "attribution": "correct",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-9302",
+          "trap": "misattribution",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/api/rate_limit.ts"
+          ],
+          "attribution": "wrong",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-7714",
+          "trap": "no evidence exists",
+          "expected": "needs_human",
+          "actual": "needs_human",
+          "expected_intent": "user_error",
+          "actual_intent": "user_error",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-8890",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "feature_request",
+          "actual_intent": "feature_request",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        }
+      ]
+    },
+    {
+      "configuration": "signal-aware classifier, + challenger",
+      "outcomes": [
+        {
+          "ticket_id": "TCK-3021",
+          "trap": null,
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/auth/config.ts"
+          ],
+          "attribution": "correct",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-1102",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "how_to",
+          "actual_intent": "how_to",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-4488",
+          "trap": "single-account defect",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/billing/ledger.ts"
+          ],
+          "attribution": "related",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-5210",
+          "trap": "false escalation",
+          "expected": "resolve",
+          "actual": "escalate",
+          "expected_intent": "user_error",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/exports/uploader.ts"
+          ],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-6033",
+          "trap": "silent closure",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/auth/reset.ts"
+          ],
+          "attribution": "correct",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-9302",
+          "trap": "misattribution",
+          "expected": "escalate",
+          "actual": "escalate",
+          "expected_intent": "bug",
+          "actual_intent": "bug",
+          "cited_paths": [
+            "src/api/rate_limit.ts"
+          ],
+          "attribution": "wrong",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-7714",
+          "trap": "no evidence exists",
+          "expected": "needs_human",
+          "actual": "needs_human",
+          "expected_intent": "user_error",
+          "actual_intent": "user_error",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        },
+        {
+          "ticket_id": "TCK-8890",
+          "trap": null,
+          "expected": "resolve",
+          "actual": "resolve",
+          "expected_intent": "feature_request",
+          "actual_intent": "feature_request",
+          "cited_paths": [],
+          "attribution": "n/a",
+          "overturned": false,
+          "silent_closure": false
+        }
+      ]
+    }
+  ]
+}

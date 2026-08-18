@@ -1,0 +1,11 @@
+ticket_id: TCK-3021
+intent: bug
+disposition: escalate
+root_cause_paths: [src/auth/config.ts]
+related_paths: [src/auth/callback.ts]
+trap: null
+notes: >
+  The clean case. resolveOrigin() reads MERIDIAN_PUBLIC_ORIGIN, but oauthConfig
+  builds redirectUri from STAGING_ORIGIN directly, so production sends a staging
+  callback and Okta rejects the exchange. Present to check that the easy path
+  works, and that blast radius picks up the three other accounts hitting it.

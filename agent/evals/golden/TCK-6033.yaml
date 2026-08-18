@@ -1,0 +1,13 @@
+ticket_id: TCK-6033
+intent: bug
+disposition: escalate
+root_cause_paths: [src/auth/reset.ts]
+related_paths: []
+trap: silent closure
+notes: >
+  verifyResetToken() computes age in milliseconds and compares it against
+  RESET_TOKEN_TTL_SECONDS, so tokens die 3.6 seconds after issue instead of an
+  hour. The ticket reads like a routine password-reset question and KB-0012
+  matches its wording almost exactly, which is what makes it dangerous: a
+  classifier that closes it destroys the only report of the defect. The tell is
+  that the customer is describing the documented one-hour window failing.

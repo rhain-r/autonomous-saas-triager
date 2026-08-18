@@ -1,0 +1,11 @@
+ticket_id: TCK-5210
+intent: user_error
+disposition: resolve
+root_cause_paths: []
+related_paths: [src/exports/uploader.ts]
+trap: false escalation
+notes: >
+  A 320 MB export against a published 50 MB ceiling. The product worked, and
+  uploader.ts is the code that correctly rejected it — so an evidence chain here
+  links perfectly and proves nothing about defectiveness. The ticket is angry and
+  blames a release, which is exactly the signal a classifier should not use.

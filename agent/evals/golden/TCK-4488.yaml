@@ -1,0 +1,11 @@
+ticket_id: TCK-4488
+intent: bug
+disposition: escalate
+root_cause_paths: [src/billing/webhook.ts]
+related_paths: [src/billing/ledger.ts]
+trap: single-account defect
+notes: >
+  Stripe retried evt_1PkA22XrmQ after the first delivery timed out on the receipt
+  call. applyCharge() has no idempotency check, so the ledger took the credit
+  twice. Only one account is affected, which is deliberate: it is the case the
+  challenger's "more than one account" heuristic cannot see.

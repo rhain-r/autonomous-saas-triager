@@ -1,0 +1,10 @@
+ticket_id: TCK-8890
+intent: feature_request
+disposition: resolve
+root_cause_paths: []
+related_paths: []
+trap: null
+notes: >
+  Unambiguous feature request. No logs, no code, no defect. Included so the
+  classifier is measured on all four intents rather than just the two that
+  produce evidence.

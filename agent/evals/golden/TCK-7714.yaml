@@ -1,0 +1,12 @@
+ticket_id: TCK-7714
+intent: user_error
+disposition: needs_human
+root_cause_paths: []
+related_paths: []
+trap: no evidence exists
+notes: >
+  A blank dashboard renders client-side, so the server logs are clean and stay
+  clean. There is nothing here to prove either way. The only correct behaviour is
+  to ask a human to request a browser console capture. Any confident answer —
+  escalation or closure — is wrong, and an escalation citing whatever else was
+  failing that day is the specific failure this ticket exists to catch.

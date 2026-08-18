@@ -1,0 +1,10 @@
+ticket_id: TCK-1102
+intent: how_to
+disposition: resolve
+root_cause_paths: []
+related_paths: []
+trap: null
+notes: >
+  A genuine how-to. The correct answer is KB-0012 and a close. Included to check
+  that the system can still close a ticket — a triager that escalates everything
+  is as useless as one that closes everything.
