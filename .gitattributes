@@ -1,0 +1,22 @@
+# Normalise text to LF in the repository; check out platform-native.
+* text=auto
+
+# Binary assets must never be line-ending normalised.
+*.png binary
+*.jpg binary
+*.gif binary
+*.mp4 binary
+*.ico binary
+
+# Keep these LF everywhere so diffs, hashes, and rendering stay stable. The log
+# fixtures and the sandbox source matter especially: cite_code() and the patch
+# gate compare against exact bytes, and a CRLF checkout would shift every offset.
+*.py text eol=lf
+*.ts text eol=lf
+*.md text eol=lf
+*.log text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.svg text eol=lf

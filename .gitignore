@@ -1,0 +1,42 @@
+# --- Secrets -----------------------------------------------------------------
+.env
+.env.*
+*.key
+*.pem
+
+# --- Customer data -----------------------------------------------------------
+# Real tickets and real production logs must never reach the remote. The only
+# tickets and logs in this repository are the synthetic ones under
+# agent/sandbox/, which we authored.
+data/
+*.log
+!agent/sandbox/logs/*.log
+
+# --- Agent run artifacts -----------------------------------------------------
+runs/
+reports/
+agent/evals/results/_sink/
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# --- Editors / OS ------------------------------------------------------------
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- Claude Code -------------------------------------------------------------
+# Shared project config is committed; personal overrides are not.
+.claude/settings.local.json

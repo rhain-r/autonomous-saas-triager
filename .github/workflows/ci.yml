@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lower and upper bound of requires-python. If it builds on both, the
+        # range in pyproject.toml is honest.
+        python-version: ["3.10", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --python ${{ matrix.python-version }}
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Test
+        run: uv run pytest
+
+      # The eval is fully deterministic — no API keys, no network — so it runs as
+      # a behavioural regression check rather than a smoke test. If a prompt, a
+      # gate, or a retrieval change quietly starts letting defects close, this is
+      # where it surfaces.
+      - name: Evaluate against golden tickets
+        run: uv run python -m agent.evals.run
+
+      - name: Verify the no-key path still works
+        run: |
+          uv run triage tickets
+          uv run triage tools
+          uv run triage inspect TCK-3021
+          uv run triage run TCK-3021 --simulate
