@@ -1,0 +1,11 @@
+{
+  "ticket_id": "TCK-1102",
+  "subject": "How do I change my password?",
+  "body": "Hi, I want to update my password because I am rotating credentials for a security review. I could not find the option in settings. Can you point me to where it is?",
+  "user_id": "usr_3345",
+  "account": "Perrin & Vale",
+  "plan": "team",
+  "channel": "chat",
+  "created_at": "2026-08-14T09:40:00Z",
+  "product_area": "account"
+}

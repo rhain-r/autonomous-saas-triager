@@ -1,0 +1,11 @@
+{
+  "ticket_id": "TCK-7714",
+  "subject": "Dashboard is completely blank",
+  "body": "I log in fine but the dashboard is just white. Nothing loads at all, no widgets, no nav. It has been like this since this morning. Please fix urgently, we have a client review at 2pm.",
+  "user_id": "usr_6001",
+  "account": "Sable Consulting",
+  "plan": "team",
+  "channel": "email",
+  "created_at": "2026-08-17T09:05:00Z",
+  "product_area": "dashboard"
+}

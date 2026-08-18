@@ -1,0 +1,11 @@
+{
+  "ticket_id": "TCK-9302",
+  "subject": "API returns 429 constantly since Monday",
+  "body": "Our nightly report job has started failing. We get 429 rate limited almost immediately and then the whole job dies. We have not changed our code and we are nowhere near 600 requests a minute in aggregate - the job only pulls three reports. Your rate limiter looks like it is counting wrong.",
+  "user_id": "usr_5510",
+  "account": "Brightlow Analytics",
+  "plan": "business",
+  "channel": "email",
+  "created_at": "2026-08-17T08:30:00Z",
+  "product_area": "api"
+}

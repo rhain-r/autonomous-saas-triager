@@ -1,0 +1,11 @@
+{
+  "ticket_id": "TCK-5210",
+  "subject": "Export keeps failing, this is broken",
+  "body": "Every time I try to export our events table the download fails. I have tried three times this morning and it errors out every single time. This worked fine last quarter. Something in your last release has clearly broken CSV export and it is blocking our board pack.",
+  "user_id": "usr_7734",
+  "account": "Ardith Retail Group",
+  "plan": "business",
+  "channel": "email",
+  "created_at": "2026-08-15T11:50:00Z",
+  "product_area": "exports"
+}

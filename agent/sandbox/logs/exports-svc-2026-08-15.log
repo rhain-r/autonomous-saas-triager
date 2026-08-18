@@ -1,0 +1,6 @@
+2026-08-15T11:20:31.004Z INFO exports-svc msg="export requested" code="EXPORT_START" user="usr_7734" detail="rows=4200000 format=csv"
+2026-08-15T11:20:31.980Z WARN exports-svc msg="export rejected: over published limit" code="EXPORT_TOO_LARGE" user="usr_7734" detail="335544320 bytes exceeds 52428800"
+2026-08-15T11:26:10.442Z INFO exports-svc msg="export requested" code="EXPORT_START" user="usr_7734" detail="rows=4200000 format=csv"
+2026-08-15T11:26:11.115Z WARN exports-svc msg="export rejected: over published limit" code="EXPORT_TOO_LARGE" user="usr_7734" detail="335544320 bytes exceeds 52428800"
+2026-08-15T11:41:55.220Z INFO exports-svc msg="export requested" code="EXPORT_START" user="usr_7734" detail="rows=180000 format=csv"
+2026-08-15T11:42:09.887Z INFO exports-svc msg="export uploaded" code="EXPORT_DONE" user="usr_7734" detail="14221440 bytes"

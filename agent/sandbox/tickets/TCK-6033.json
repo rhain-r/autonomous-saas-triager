@@ -1,0 +1,11 @@
+{
+  "ticket_id": "TCK-6033",
+  "subject": "Password reset link says it has expired",
+  "body": "I asked for a password reset and the email arrived within a few seconds. When I click the link it tells me the link has expired and to request a new one. I have tried three times now, including clicking it immediately after the email lands. I am not using SSO.",
+  "user_id": "usr_4471",
+  "account": "Nyland Health",
+  "plan": "team",
+  "channel": "chat",
+  "created_at": "2026-08-16T14:47:00Z",
+  "product_area": "auth"
+}

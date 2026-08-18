@@ -1,0 +1,60 @@
+{
+  "repository": "meridian/meridian-platform",
+  "default_branch": "main",
+  "commits": [
+    {
+      "sha": "9f4c1a7",
+      "authored_at": "2026-08-13T17:44:02Z",
+      "author": "d.okafor",
+      "subject": "refactor(auth): centralise origin resolution behind resolveOrigin()",
+      "body": "Pulls the public origin out of four call sites. Callback URL now derives from resolveOrigin() so self-hosted deployments stop hardcoding app.meridian.io.",
+      "files": ["src/auth/config.ts", "src/auth/callback.ts"],
+      "pull_request": 4471
+    },
+    {
+      "sha": "2b81e30",
+      "authored_at": "2026-08-13T09:10:55Z",
+      "author": "s.lindqvist",
+      "subject": "chore(auth): extend session ttl to 12h after churn review",
+      "body": "Product asked for fewer forced re-logins on the Team plan.",
+      "files": ["src/auth/config.ts", "src/auth/session.ts"],
+      "pull_request": 4468
+    },
+    {
+      "sha": "c0da915",
+      "authored_at": "2026-08-11T12:02:31Z",
+      "author": "d.okafor",
+      "subject": "feat(auth): add single-use password reset tokens",
+      "body": "Reset tokens are hashed at rest and consumed on first successful use. TTL is one hour.",
+      "files": ["src/auth/reset.ts", "src/platform/crypto.ts"],
+      "pull_request": 4455
+    },
+    {
+      "sha": "77ae4d2",
+      "authored_at": "2026-08-09T15:33:18Z",
+      "author": "m.reyes",
+      "subject": "feat(api): retry retryable upstream statuses in the report worker",
+      "body": "Transient 5xx from the events upstream was failing whole report runs. Retries up to 8 attempts.",
+      "files": ["src/api/client.ts"],
+      "pull_request": 4432
+    },
+    {
+      "sha": "e13b806",
+      "authored_at": "2026-08-06T08:21:44Z",
+      "author": "s.lindqvist",
+      "subject": "feat(billing): handle charge.refunded webhooks",
+      "body": "Adds a reversal path to the ledger. charge.succeeded handling is unchanged.",
+      "files": ["src/billing/webhook.ts", "src/billing/ledger.ts"],
+      "pull_request": 4410
+    },
+    {
+      "sha": "a5f2c64",
+      "authored_at": "2026-07-29T11:05:09Z",
+      "author": "m.reyes",
+      "subject": "chore(exports): publish the 50MB ceiling in the rejection message",
+      "body": "Support asked for the limit to appear in the error text so customers stop filing tickets for it.",
+      "files": ["src/exports/uploader.ts", "src/exports/limits.ts"],
+      "pull_request": 4388
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "ticket_id": "TCK-3021",
+  "subject": "Cannot log in - page just keeps refreshing",
+  "body": "Since yesterday morning I cannot get into Meridian. I click Log in with Okta, it takes me to our company sign-in page, I put in my credentials and approve the push notification, and then it drops me straight back on the Meridian login page. It just loops. No error message at all. Two other people on my team are seeing the same thing. We are on app.meridian.io.",
+  "user_id": "usr_8812",
+  "account": "Halberd Logistics",
+  "plan": "business",
+  "channel": "email",
+  "created_at": "2026-08-14T09:31:00Z",
+  "product_area": "auth"
+}

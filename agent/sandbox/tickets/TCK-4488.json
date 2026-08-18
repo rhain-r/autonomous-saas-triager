@@ -1,0 +1,11 @@
+{
+  "ticket_id": "TCK-4488",
+  "subject": "We were billed twice this month",
+  "body": "Our card was charged 249.00 twice on 15 August, about thirty seconds apart. Both show as settled on our statement, not pending. Invoice list only shows one invoice for the period. Please refund the duplicate.",
+  "user_id": "usr_2290",
+  "account": "Colwyn Foods",
+  "plan": "business",
+  "channel": "email",
+  "created_at": "2026-08-15T08:15:00Z",
+  "product_area": "billing"
+}
