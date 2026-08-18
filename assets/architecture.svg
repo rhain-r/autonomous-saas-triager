@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 780" width="940" height="780" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <style>
+    :root { color-scheme: light dark; }
+    .bg    { fill: #ffffff; }
+    .card  { fill: #f6f8fa; stroke: #d0d7de; }
+    .model { fill: #eef4ff; stroke: #9db8f0; }
+    .gate  { fill: #fff4e6; stroke: #e0a45e; }
+    .stop  { fill: #ffeef0; stroke: #e6a3ab; }
+    .ok    { fill: #eefbf1; stroke: #93cba4; }
+    .t     { fill: #1f2328; font-size: 14px; }
+    .tb    { fill: #1f2328; font-size: 14px; font-weight: 650; }
+    .ts    { fill: #59636e; font-size: 12px; }
+    .tm    { fill: #59636e; font-size: 11.5px; font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; }
+    .title { fill: #1f2328; font-size: 17px; font-weight: 700; }
+    .lbl   { fill: #59636e; font-size: 11px; font-weight: 650; letter-spacing: .08em; }
+    .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
+    .head  { fill: #8c959f; }
+    .rule  { stroke: #d0d7de; stroke-width: 1; }
+    @media (prefers-color-scheme: dark) {
+      .bg    { fill: #0d1117; }
+      .card  { fill: #161b22; stroke: #30363d; }
+      .model { fill: #12203c; stroke: #2f5597; }
+      .gate  { fill: #2b1d0e; stroke: #8a5a20; }
+      .stop  { fill: #2d1214; stroke: #8a3d45; }
+      .ok    { fill: #0f2416; stroke: #2d6a3f; }
+      .t, .tb, .title { fill: #e6edf3; }
+      .ts, .tm, .lbl  { fill: #9198a1; }
+      .arrow { stroke: #6e7681; }
+      .head  { fill: #6e7681; }
+      .rule  { stroke: #30363d; }
+    }
+  </style>
+
+  <rect class="bg" width="940" height="780"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" class="head"/>
+    </marker>
+  </defs>
+
+  <text class="title" x="32" y="40">Autonomous SaaS bug triager</text>
+  <text class="ts" x="32" y="62">Nothing reaches engineering, or the customer, that the system cannot quote.</text>
+  <line class="rule" x1="32" y1="80" x2="908" y2="80"/>
+
+  <text class="lbl" x="32" y="108">PIPELINE</text>
+  <text class="lbl" x="530" y="108">WHAT IT REFUSES</text>
+
+  <!-- 1. Ticket -->
+  <rect class="card" x="32" y="122" width="420" height="42" rx="7"/>
+  <text class="tb" x="48" y="149">Ticket</text>
+  <text class="tm" x="150" y="149">subject · body · user_id · created_at</text>
+  <path class="arrow" d="M242,164 L242,186" marker-end="url(#a)"/>
+
+  <!-- 2. Classify -->
+  <rect class="model" x="32" y="188" width="420" height="52" rx="7"/>
+  <text class="tb" x="48" y="212">Classify</text>
+  <text class="ts" x="128" y="212">Claude</text>
+  <text class="tm" x="48" y="230">bug · user_error · how_to · feature_request</text>
+  <path class="arrow" d="M242,240 L242,262" marker-end="url(#a)"/>
+
+  <!-- 3. Gather -->
+  <rect class="card" x="32" y="264" width="420" height="106" rx="7"/>
+  <text class="tb" x="48" y="288">Gather</text>
+  <text class="ts" x="122" y="288">deterministic · always runs · no model</text>
+  <text class="tm" x="48" y="308">search_error_logs(user, ±6h)</text>
+  <text class="tm" x="48" y="325">read_log_window(anchor)   ← the INFO lines the error omits</text>
+  <text class="tm" x="48" y="342">search_error_logs(code, all users)  ← "is it just them?"</text>
+  <text class="tm" x="48" y="359">search_codebase · read_file · git_log · search_docs</text>
+  <path class="arrow" d="M242,370 L242,392" marker-end="url(#a)"/>
+
+  <!-- 4. Hypothesise -->
+  <rect class="model" x="32" y="394" width="420" height="52" rx="7"/>
+  <text class="tb" x="48" y="418">Hypothesise</text>
+  <text class="ts" x="160" y="418">Claude</text>
+  <text class="tm" x="48" y="436">statement · event_ids[] · file_quotes[]</text>
+  <path class="arrow" d="M242,446 L242,468" marker-end="url(#a)"/>
+
+  <!-- 5. Evidence gate -->
+  <rect class="gate" x="32" y="470" width="420" height="112" rx="7"/>
+  <text class="tb" x="48" y="494">Evidence gate</text>
+  <text class="ts" x="180" y="494">deterministic — no model gets a vote</text>
+  <text class="tm" x="48" y="515">cite_log(id)      → not in any log file  ⇒ fabrication</text>
+  <text class="tm" x="48" y="532">cite_code(path,q) → not in that file     ⇒ fabrication</text>
+  <text class="tm" x="48" y="552">joint 1  log → code   error-signature tokens ∩ code tokens</text>
+  <text class="tm" x="48" y="569">joint 2  ticket → log  reporter's user id, or shared words</text>
+  <path class="arrow" d="M242,582 L242,604" marker-end="url(#a)"/>
+
+  <!-- 6. Route -->
+  <rect class="card" x="32" y="606" width="420" height="94" rx="7"/>
+  <text class="tb" x="48" y="630">Route</text>
+  <text class="tm" x="48" y="651">bug + linked chain            ⇒ ESCALATE</text>
+  <text class="tm" x="48" y="668">user_error + linked chain     ⇒ RESOLVE  → challenged</text>
+  <text class="tm" x="48" y="685">anything unproven             ⇒ NEEDS_HUMAN</text>
+
+  <path class="arrow" d="M452,653 L500,653 L500,300 L530,300" marker-end="url(#a)"/>
+  <path class="arrow" d="M242,700 L242,722" marker-end="url(#a)"/>
+
+  <!-- 7. Deliver -->
+  <rect class="ok" x="32" y="724" width="420" height="42" rx="7"/>
+  <text class="tb" x="48" y="751">Deliver</text>
+  <text class="tm" x="130" y="751">Jira payload · reply · risk score · full trace</text>
+
+  <!-- Right column -->
+  <rect class="stop" x="530" y="122" width="378" height="150" rx="7"/>
+  <text class="tb" x="546" y="146">Three refusals</text>
+  <text class="ts" x="546" y="168">A quote that is not in the file it names.</text>
+  <text class="ts" x="546" y="188">Real citations that share no diagnostic terms —</text>
+  <text class="ts" x="546" y="205">accurate, and about an innocent file.</text>
+  <text class="ts" x="546" y="225">Evidence that cannot be tied to this ticket —</text>
+  <text class="ts" x="546" y="242">coherent, and somebody else's incident.</text>
+  <text class="tm" x="546" y="263">all three ⇒ NEEDS_HUMAN, never dropped</text>
+
+  <!-- Challenger -->
+  <rect class="gate" x="530" y="286" width="378" height="182" rx="7"/>
+  <text class="tb" x="546" y="310">Challenger</text>
+  <text class="ts" x="640" y="310">Gemini — a different lab, on purpose</text>
+  <text class="ts" x="546" y="333">Runs on auto-closes only. An escalation already</text>
+  <text class="ts" x="546" y="350">has a human in its future; a closure does not.</text>
+  <text class="ts" x="546" y="374">Burden inverted: prove a defect is there anyway.</text>
+  <text class="tm" x="546" y="398">wider window · unfiltered by user · reads the code</text>
+  <text class="tm" x="546" y="422">overturned → back through the same gate ⇒ ESCALATE</text>
+  <text class="tm" x="546" y="439">upheld                                  ⇒ RESOLVE</text>
+  <text class="tm" x="546" y="456">error / unprovable                      ⇒ NEEDS_HUMAN</text>
+
+  <!-- Patch gate -->
+  <rect class="gate" x="530" y="482" width="378" height="136" rx="7"/>
+  <text class="tb" x="546" y="506">Patch gate</text>
+  <text class="ts" x="546" y="529">Models never emit diffs. They emit old_text and</text>
+  <text class="ts" x="546" y="546">new_text; the anchor is located in the real file and</text>
+  <text class="ts" x="546" y="563">the diff generated from the actual before and after.</text>
+  <text class="tm" x="546" y="586">anchor missing   ⇒ rejected, reason in the report</text>
+  <text class="tm" x="546" y="603">anchor ambiguous ⇒ rejected rather than guessed</text>
+
+  <!-- Asymmetry note -->
+  <rect class="card" x="530" y="632" width="378" height="134" rx="7"/>
+  <text class="tb" x="546" y="656">Why the budget goes one way</text>
+  <text class="ts" x="546" y="679">Escalating a ghost costs a developer an afternoon,</text>
+  <text class="ts" x="546" y="696">and they find out. Closing a real defect destroys</text>
+  <text class="ts" x="546" y="713">the only report of it, and nobody finds out.</text>
+  <text class="ts" x="546" y="737">The errors are not symmetric, so the verification</text>
+  <text class="ts" x="546" y="754">is not either.</text>
+</svg>

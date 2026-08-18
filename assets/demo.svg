@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 640" width="940" height="640" font-family="ui-monospace, 'SFMono-Regular', 'Cascadia Code', Consolas, monospace">
+  <style>
+    :root { color-scheme: light dark; }
+    .bg     { fill: #ffffff; }
+    .term   { fill: #f6f8fa; stroke: #d0d7de; }
+    .chrome { fill: #eaeef2; }
+    .t      { fill: #1f2328; font-size: 12.5px; }
+    .dim    { fill: #6e7781; font-size: 12.5px; }
+    .cmd    { fill: #1f2328; font-size: 12.5px; font-weight: 700; }
+    .red    { fill: #b62324; font-size: 12.5px; font-weight: 700; }
+    .yellow { fill: #8a6100; font-size: 12.5px; font-weight: 700; }
+    .cyan   { fill: #0a5a72; font-size: 12.5px; }
+    .green  { fill: #1a7f37; font-size: 12.5px; }
+    .plus   { fill: #1a7f37; font-size: 12.5px; }
+    .cap    { fill: #59636e; font-size: 12.5px; font-family: ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, sans-serif; }
+    .capb   { fill: #1f2328; font-size: 13px; font-weight: 650; font-family: ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, sans-serif; }
+    .dot1 { fill: #ff5f57; } .dot2 { fill: #febc2e; } .dot3 { fill: #28c840; }
+    @media (prefers-color-scheme: dark) {
+      .bg     { fill: #0d1117; }
+      .term   { fill: #161b22; stroke: #30363d; }
+      .chrome { fill: #21262d; }
+      .t, .cmd, .capb { fill: #e6edf3; }
+      .dim, .cap { fill: #9198a1; }
+      .red    { fill: #ff7b72; }
+      .yellow { fill: #e3b341; }
+      .cyan   { fill: #79c0ff; }
+      .green, .plus { fill: #7ee787; }
+    }
+  </style>
+
+  <rect class="bg" width="940" height="640"/>
+
+  <!-- Panel 1 -->
+  <rect class="term" x="20" y="20" width="900" height="330" rx="8"/>
+  <rect class="chrome" x="20" y="20" width="900" height="26" rx="8"/>
+  <rect class="chrome" x="20" y="38" width="900" height="8"/>
+  <circle class="dot1" cx="38" cy="33" r="5"/>
+  <circle class="dot2" cx="55" cy="33" r="5"/>
+  <circle class="dot3" cx="72" cy="33" r="5"/>
+
+  <text class="cmd" x="38" y="72">$ uv run triage run TCK-3021 --simulate</text>
+
+  <text class="t"   x="38" y="102">╭─ TCK-3021 ────────────────────────────────────────────────────────────────╮</text>
+  <text class="t"   x="38" y="120">│ </text>
+  <text class="red" x="52" y="120">ESCALATE</text>
+  <text class="t"   x="126" y="120">  intent=bug  severity=critical  risk=96/100                  │</text>
+  <text class="t"   x="38" y="138">╰───────────────────────────────────────────────────────────────────────────╯</text>
+
+  <text class="cmd" x="38" y="168">Diagnosis</text>
+  <text class="t"   x="38" y="186">src/auth/config.ts emits or configures the behaviour behind this failure.</text>
+
+  <text class="cmd" x="38" y="216">Verified evidence</text>
+  <text class="t"   x="182" y="216">— shared terms: </text>
+  <text class="cyan" x="300" y="216">auth, callback, redirect, staging, uri</text>
+  <text class="t"   x="38" y="234">(strength 1.00), 4 user(s) affected</text>
+
+  <text class="dim" x="38" y="258">  auth-svc-2026-08-14.log:3</text>
+  <text class="t"   x="238" y="258">ERROR code="OAUTH_REDIRECT_MISMATCH" user="usr_8812"</text>
+  <text class="dim" x="38" y="276">  auth-svc-2026-08-14.log:8</text>
+  <text class="t"   x="238" y="276">ERROR code="OAUTH_REDIRECT_MISMATCH" user="usr_9930"</text>
+  <text class="dim" x="38" y="294">  auth-svc-2026-08-14.log:9</text>
+  <text class="t"   x="238" y="294">ERROR code="OAUTH_REDIRECT_MISMATCH" user="usr_1204"</text>
+
+  <text class="dim" x="38" y="320">  src/auth/config.ts:39</text>
+  <text class="t"   x="238" y="320">redirectUri: `${STAGING_ORIGIN}/auth/callback`,</text>
+
+  <text class="capb" x="38" y="374">Every locator above was checked before it was printed.</text>
+  <text class="cap"  x="38" y="393">The log line is at that byte offset in that file; the code is at line 39 of a file whose SHA is recorded.</text>
+  <text class="cap"  x="38" y="411">The five shared terms are what connects them — computed, not asserted by the model.</text>
+
+  <!-- Panel 2 -->
+  <rect class="term" x="20" y="436" width="900" height="184" rx="8"/>
+  <rect class="chrome" x="20" y="436" width="900" height="26" rx="8"/>
+  <rect class="chrome" x="20" y="454" width="900" height="8"/>
+  <circle class="dot1" cx="38" cy="449" r="5"/>
+  <circle class="dot2" cx="55" cy="449" r="5"/>
+  <circle class="dot3" cx="72" cy="449" r="5"/>
+
+  <text class="cmd" x="38" y="488">$ uv run triage run TCK-7714 --simulate</text>
+  <text class="dim" x="330" y="488"># "Dashboard is completely blank"</text>
+
+  <text class="t"      x="38" y="518">╭─ TCK-7714 ────────────────────────────────────────────────────────────────╮</text>
+  <text class="t"      x="38" y="536">│ </text>
+  <text class="yellow" x="52" y="536">NEEDS_HUMAN</text>
+  <text class="t"      x="152" y="536">  intent=user_error  severity=low  risk=0/100                 │</text>
+  <text class="t"      x="38" y="554">╰───────────────────────────────────────────────────────────────────────────╯</text>
+
+  <text class="t"      x="38" y="584">No server-side evidence connects this ticket to a code path. Either the failure</text>
+  <text class="t"      x="38" y="602">is client-side or it was not logged.  </text>
+  <text class="yellow" x="440" y="602">No verified evidence chain.</text>
+</svg>
