@@ -25,21 +25,57 @@ from agent.tools.logs import cite_log, parse_line, read_log_window, search_error
 # --- Sandbox containment -----------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "path",
-    ["../../../.env", "../../config.py", "src/../../secrets.txt", "C:/Windows/win.ini"],
-)
-def test_traversal_out_of_the_sandbox_is_refused(path):
-    """An investigator that can be talked into reading `../../.env` is not a
-    support agent, it is an exfiltration path."""
+HOSTILE_PATHS = [
+    "../../../.env",
+    "../../config.py",
+    "src/../../secrets.txt",
+    "src/auth/../../../../../../etc/shadow",
+    "/etc/passwd",
+    "//srv/secrets",
+    "\\windows\\system.ini",
+    "C:/Windows/win.ini",
+]
+
+
+@pytest.mark.parametrize("path", HOSTILE_PATHS)
+def test_no_path_can_reach_outside_the_sandbox(path):
+    """The guarantee, stated so that it holds on every platform.
+
+    A hostile path is either refused outright or re-rooted inside the sandbox.
+    *Which* of the two happens depends on how the host OS parses the string:
+    `C:/Windows/win.ini` is absolute on Windows and gets caught by the
+    containment check, while on POSIX it is a directory literally named `C:`
+    that lands harmlessly inside the sandbox. Either outcome is safe.
+
+    An earlier version of this test asserted the mechanism — "this input must
+    raise" — which passed on Windows and failed on Linux CI. The property worth
+    pinning is that nothing escapes, not how it fails to.
+    """
+    try:
+        resolved = code_tools._resolve(path)
+    except SandboxEscape:
+        return
+
+    root = code_tools.SANDBOX_REPO.resolve()
+    assert resolved == root or root in resolved.parents
+    assert not resolved.exists(), "a hostile path resolved onto a real file"
+
+
+@pytest.mark.parametrize("path", ["../../../.env", "../../config.py", "src/../../secrets.txt"])
+def test_relative_traversal_is_refused_on_every_platform(path):
+    """`../` means the same thing everywhere, so this one can assert the raise.
+
+    An investigator that can be talked into reading `../../.env` is not a
+    support agent, it is an exfiltration path.
+    """
     with pytest.raises(SandboxEscape):
         code_tools._resolve(path)
 
 
-@pytest.mark.parametrize("path", ["/etc/passwd", "//srv/secrets", "\\windows\\system.ini"])
-def test_an_absolute_path_is_treated_as_sandbox_relative(path):
-    """Rooted paths are re-rooted rather than rejected — the same contract a
-    chroot gives. They resolve inside the sandbox, where there is nothing to
+@pytest.mark.parametrize("path", ["/etc/passwd", "//srv/secrets"])
+def test_a_rooted_path_is_treated_as_sandbox_relative(path):
+    """Rooted POSIX paths are re-rooted rather than rejected — the same contract
+    a chroot gives. They resolve inside the sandbox, where there is nothing to
     find, instead of reaching the host filesystem."""
     resolved = code_tools._resolve(path)
     assert code_tools.SANDBOX_REPO.resolve() in resolved.parents
