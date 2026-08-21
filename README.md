@@ -33,7 +33,7 @@ register as the right one.
 The two errors are not symmetric.
 
 **Escalating a ghost** — a detailed, plausible RCA blaming a file that has
-nothing to do with the symptom — costs a developer an afternoon. It is expensive,
+nothing to do with the symptom, costs a developer an afternoon. It is expensive,
 and it is *self-correcting*: they open it, find nothing, and say so.
 
 **Closing a real defect** — a help article, a polite reply, a shut ticket — costs
@@ -46,31 +46,21 @@ citations that resolve against real files and demonstrably connect to the
 symptom. No ticket is closed as "working as intended" until a different model,
 from a different lab, has tried and failed to prove a defect is there.
 
-## The gates, doing their job
+## Backend Demonstration
 
 ![Two runs: an escalation with verified evidence, and a refusal](assets/demo.svg)
 
-Reproduce both yourself — no API key required:
+Try it out! (no API key required):
 
 ```bash
 uv run triage run TCK-3021 --simulate --verbose
 uv run triage run TCK-7714 --simulate
 ```
 
-<!-- Execution recording: drop your screen capture or screenshot into assets/ and
-     replace this comment with it, e.g. ![Agent run](assets/workflow-execution.jpg) -->
+## Interface Demonstration
 
-## Interface concepts
-
-Two live pages, both self-contained — no build step, no dependencies, nothing
-fetched at runtime. Every ticket, log line, code span, diff and metric in them is
-real output from the offline run above, including the two decisions the system
-gets wrong.
-
-| | |
-| --- | --- |
-| **[Product showcase &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/showcase.html)** | A guided walkthrough for a first-time reader: five-step feature tour, filterable queue, light and dark themes. |
-| **[Operator console &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/console.html)** | The engineer's view: every decision shown beside the evidence chain that earned it, including the ones it refuses to make. |
+| **[Live &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/showcase.html)** | A guided walkthrough for a first-time reader: five-step feature tour, filterable queue, light and dark themes. |
+| **[Console &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/console.html)** | The engineer's view: every decision shown beside the evidence chain that earned it, including the ones it refuses to make. |
 
 Source: [`assets/showcase.html`](assets/showcase.html) &middot;
 [`assets/console.html`](assets/console.html)
@@ -123,7 +113,7 @@ Source: [`assets/showcase.html`](assets/showcase.html) &middot;
 
 </details>
 
-## Engineering challenges solved
+## Challenges Solved
 
 * **Confident misattribution.** A model that greps `auth`, lands on
   `src/auth/session.ts`, and quotes it *accurately* has produced a perfect
@@ -133,6 +123,7 @@ Source: [`assets/showcase.html`](assets/showcase.html) &middot;
     (`redirect_uri` in a log matches `redirectUri` in source), *and* the cited
     events must tie back to this ticket. Both computed in Python; a model can
     assert a connection but cannot assert the overlap that proves one.
+<br>
 * **The lazy close.** The cheapest action is to match a help-centre article and
   shut the ticket — and the article is often the *specification the product is
   violating*, not the answer.
@@ -140,65 +131,21 @@ Source: [`assets/showcase.html`](assets/showcase.html) &middot;
     assume the first agent was lazy. It gets a wider log window, unfiltered by
     user, and reads the code path the customer described. Its own citations go
     back through the same gate.
+<br>
 * **Patches that apply to nothing.** Models hallucinate diff context and
   mis-count hunk offsets, and a plausible non-applying patch looks like work
   until an engineer tries it.
   * *Solution:* **Models never emit diffs.** They emit `old_text` / `new_text`;
     `agent/patcher.py` locates the anchor in the real file, refuses it if missing
     or ambiguous, and generates the diff itself. It applies by construction.
+<br>
 * **Self-contradictory output.** Agents cheerfully return `disposition=escalate`
   with no evidence, or `intent=bug` alongside `disposition=resolve`.
   * *Solution:* **Schema-enforced integrity.** Pydantic v2 with `extra="forbid"`
     raises on logically impossible combinations. Closing a confirmed defect is
     not a judgement call the system is allowed to make.
 
-## Quick start
-
-**Prerequisites:** [uv](https://docs.astral.sh/uv/). Nothing else — it fetches
-its own CPython 3.12 and leaves your system Python alone.
-
-```bash
-git clone https://github.com/rhain-r/autonomous-saas-triager.git
-cd autonomous-saas-triager
-uv sync
-```
-
-**Try it with no API key.** `inspect` shows a ticket with the evidence sitting
-around it:
-
-```bash
-uv run triage inspect TCK-3021
-```
-
-Then run the whole queue with deterministic stand-ins in place of models:
-
-```bash
-uv run triage run --simulate
-```
-
-```
-┌──────────┬────────────────┬─────────────┬──────┬──────────────────────┬───────────┐
-│ Ticket   │ Intent         │ Decision    │ Risk │ Cited file           │ Challenge │
-├──────────┼────────────────┼─────────────┼──────┼──────────────────────┼───────────┤
-│ TCK-3021 │ bug            │ escalate    │   96 │ src/auth/config.ts   │ —         │
-│ TCK-6033 │ bug            │ escalate    │   60 │ src/auth/reset.ts    │ —         │
-│ TCK-4488 │ bug            │ escalate    │   52 │ src/billing/ledger.ts│ —         │
-│ TCK-9302 │ bug            │ escalate    │   52 │ src/api/rate_limit.ts│ —         │
-│ TCK-5210 │ bug            │ escalate    │   28 │ src/exports/uploader…│ —         │
-│ TCK-1102 │ how_to         │ resolve     │    — │ —                    │ upheld    │
-│ TCK-7714 │ user_error     │ needs_human │    — │ —                    │ —         │
-│ TCK-8890 │ feature_request│ resolve     │    — │ —                    │ upheld    │
-└──────────┴────────────────┴─────────────┴──────┴──────────────────────┴───────────┘
-```
-
-Add keys to `.env` (see the [setup guide](docs/setup-guide.md)) and run it
-against real models:
-
-```bash
-uv run triage run TCK-3021 --verbose --markdown
-```
-
-### What it is investigating
+### What it is worth investigating?
 
 `agent/sandbox/` is a simulated production estate made of **real files**, not
 mocks: a small TypeScript service tree, service logs in the format its own logger
@@ -274,7 +221,7 @@ that reaches a human is expensive and safe; one that gets closed is neither.
 ticket that was genuinely working as designed — the failure mode that would make
 verification worse than useless.
 
-### What the eval actually found
+### What my evaluation actually found
 
 **1. The challenger halves silent closures, and its lift depends entirely on the
 classifier.** Against a keyword-only classifier it rescued one of two closed
@@ -308,28 +255,6 @@ than rounding it up.
 
 Raw results: [`agent/evals/results/`](agent/evals/results/).
 
-## Testing
-
-```bash
-uv run pytest
-```
-
-```
-132 passed in 3.59s
-```
-
-The suite runs entirely against `StubClient` and the deterministic stand-ins.
-Tests target rejection paths, not just happy paths: invented log ids, quotes
-attributed to the wrong file, real citations that share no vocabulary, chains
-belonging to somebody else's incident, challengers that crash, overturns that
-cannot be quoted, and patches whose anchor is ambiguous.
-
-The load-bearing tests are
-`test_accurate_citations_that_do_not_connect_cannot_reach_the_tracker` and
-`test_a_chain_from_someone_elses_incident_fails_the_ticket_anchor`. In both, every
-citation is genuine and the conclusion is still wrong. If those stop passing, the
-architecture no longer earns its cost.
-
 ## Tech stack
 
 | Component | Choice | Why |
@@ -341,39 +266,6 @@ architecture no longer earns its cost.
 | Tracker | Jira REST (`JiraSink`), file sink by default | Opt-in via `--live` |
 | Tooling | `uv`, `pytest`, `ruff`, `typer`, `rich` | |
 | Built with | Claude Code | See [build plan](docs/build-plan.md) |
-
-**On agent frameworks.** The orchestration is purpose-built rather than delegated
-to LangChain or LangGraph. `agent/llm.py` defines a one-method `ModelClient`
-protocol, so an adapter for any framework is a single class — nothing in schemas,
-tools, evidence, or reporting moves. The loop itself is a few dozen lines; a
-framework would not have made it shorter, and would have made the evidence gate
-harder to express. It also keeps the test suite free and offline.
-
-## Status and honest limitations
-
-**Working:** tools, citation gates, both link joints, the loop, routing, the
-challenger, the patch gate, tracker sinks, reporting, CLI, eval harness. 132
-tests passing, `ruff` clean.
-
-**Never measured against real models.** Every number above comes from
-deterministic stand-ins. The system is wired for Claude and Gemini and will run
-against them, but it has not been, so no claim about model accuracy appears
-anywhere in this repository.
-
-**The challenger only looks at closures.** An escalation already has a human in
-its future; a closure does not. That reasoning is sound, and the cost of it is
-one false escalation in eight tickets, quantified above. Symmetric challenge is
-the top of the backlog.
-
-**The evidence gate is lexical.** It proves shared vocabulary, not causation, and
-it will not see a cause that shares no words with its symptom. That is why an
-unlinked chain routes to a human and is never discarded.
-
-**One log format.** `tools/logs.py` parses the key-value shape the sandbox logger
-emits. A real estate with three log formats needs three parsers.
-
-Other known limits, in full:
-[architecture.md § Known limitations](docs/architecture.md#known-limitations).
 
 ## Documentation
 
