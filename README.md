@@ -62,9 +62,9 @@ uv run triage run TCK-7714 --simulate
 ## Interface Demonstration (Click for better visual experience)
 
 | **[Live &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/showcase.html)** | A guided walkthrough  |
+
 | --- | --- |
 | **[Console &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/console.html)** | The work behind the scene |
-| --- | --- |
 
 Source: [`assets/showcase.html`](assets/showcase.html) &middot;
 [`assets/console.html`](assets/console.html)
