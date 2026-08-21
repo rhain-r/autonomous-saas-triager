@@ -46,6 +46,8 @@ citations that resolve against real files and demonstrably connect to the
 symptom. No ticket is closed as "working as intended" until a different model,
 from a different lab, has tried and failed to prove a defect is there.
 
+---
+
 ## Backend Demonstration
 
 ![Two runs: an escalation with verified evidence, and a refusal](assets/demo.svg)
@@ -57,13 +59,16 @@ uv run triage run TCK-3021 --simulate --verbose
 uv run triage run TCK-7714 --simulate
 ```
 
-## Interface Demonstration
+## Interface Demonstration (Click for better visual experience)
 
-| **[Live &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/showcase.html)** | A guided walkthrough for a first-time reader: five-step feature tour, filterable queue, light and dark themes. |
-| **[Console &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/console.html)** | The engineer's view: every decision shown beside the evidence chain that earned it, including the ones it refuses to make. |
+| --- | --- |
+| **[Live &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/showcase.html)** | A guided walkthrough  |
+| **[Console &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/console.html)** | The work behind the scene |
+| --- | --- |
 
 Source: [`assets/showcase.html`](assets/showcase.html) &middot;
 [`assets/console.html`](assets/console.html)
+
 
 ## Architecture
 
@@ -113,6 +118,8 @@ Source: [`assets/showcase.html`](assets/showcase.html) &middot;
 
 </details>
 
+---
+
 ## Challenges Solved
 
 * **Confident misattribution.** A model that greps `auth`, lands on
@@ -123,7 +130,7 @@ Source: [`assets/showcase.html`](assets/showcase.html) &middot;
     (`redirect_uri` in a log matches `redirectUri` in source), *and* the cited
     events must tie back to this ticket. Both computed in Python; a model can
     assert a connection but cannot assert the overlap that proves one.
-<br>
+<br></br>
 * **The lazy close.** The cheapest action is to match a help-centre article and
   shut the ticket — and the article is often the *specification the product is
   violating*, not the answer.
@@ -131,14 +138,14 @@ Source: [`assets/showcase.html`](assets/showcase.html) &middot;
     assume the first agent was lazy. It gets a wider log window, unfiltered by
     user, and reads the code path the customer described. Its own citations go
     back through the same gate.
-<br>
+<br></br>
 * **Patches that apply to nothing.** Models hallucinate diff context and
   mis-count hunk offsets, and a plausible non-applying patch looks like work
   until an engineer tries it.
   * *Solution:* **Models never emit diffs.** They emit `old_text` / `new_text`;
     `agent/patcher.py` locates the anchor in the real file, refuses it if missing
     or ambiguous, and generates the diff itself. It applies by construction.
-<br>
+<br></br>
 * **Self-contradictory output.** Agents cheerfully return `disposition=escalate`
   with no evidence, or `intent=bug` alongside `disposition=resolve`.
   * *Solution:* **Schema-enforced integrity.** Pydantic v2 with `extra="forbid"`
@@ -157,6 +164,8 @@ Four genuine defects are planted in it — an OAuth redirect built from the stag
 origin, a reset-token TTL comparing milliseconds against seconds, a Stripe
 webhook with no idempotency check, a retry loop with no backoff. None of them is
 labelled with a comment. A bug you can grep for tests nothing.
+
+---
 
 ## Repository layout
 
@@ -254,6 +263,8 @@ failure than not sending them at all, and the scorer reports it as `wrong` rathe
 than rounding it up.
 
 Raw results: [`agent/evals/results/`](agent/evals/results/).
+
+---
 
 ## Tech stack
 
