@@ -7,7 +7,6 @@ patch, and either escalates it to a tracker or answers the customer and closes.
 It is built around one constraint: **nothing reaches engineering, or the
 customer, that the system cannot quote.**
 
-LIVE: rhain-r.github.io/autonomous-saas-triager/assets/showcase.html#console 
 
 ---
 
