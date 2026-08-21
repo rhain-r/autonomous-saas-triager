@@ -59,6 +59,21 @@ uv run triage run TCK-7714 --simulate
 <!-- Execution recording: drop your screen capture or screenshot into assets/ and
      replace this comment with it, e.g. ![Agent run](assets/workflow-execution.jpg) -->
 
+## Interface concepts
+
+Two live pages, both self-contained — no build step, no dependencies, nothing
+fetched at runtime. Every ticket, log line, code span, diff and metric in them is
+real output from the offline run above, including the two decisions the system
+gets wrong.
+
+| | |
+| --- | --- |
+| **[Product showcase &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/showcase.html)** | A guided walkthrough for a first-time reader: five-step feature tour, filterable queue, light and dark themes. |
+| **[Operator console &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/console.html)** | The engineer's view: every decision shown beside the evidence chain that earned it, including the ones it refuses to make. |
+
+Source: [`assets/showcase.html`](assets/showcase.html) &middot;
+[`assets/console.html`](assets/console.html)
+
 ## Architecture
 
 ![Agent architecture](assets/architecture.svg)
