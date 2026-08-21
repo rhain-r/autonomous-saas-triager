@@ -1,0 +1,810 @@
+<title>Warrant Triage Agent</title>
+<style>
+/* ============================================================
+   TOKENS — light palette on bare :root, redefined for dark twice
+   ============================================================ */
+:root{
+  --paper:#F5F6FA;      --card:#FFFFFF;       --card2:#EDEFF7;
+  --ink:#0E1226;        --ink2:#4A5169;       --ink3:#767D96;
+  --line:#DDE1EE;       --line2:#EAEDF5;
+  --brand:#2B4EE6;      --brand-ink:#FFFFFF;  --brand-soft:#E4E9FF;  --brand-glow:rgba(43,78,230,.30);
+  --coral:#E23D2C;      --coral-soft:#FFE6E2;
+  --amber:#9A6400;      --amber-soft:#FFF1D6;
+  --emerald:#0E7A4B;    --emerald-soft:#DCF5E8;
+  --ring:0 0 0 3px var(--brand-glow);
+  --sh1:0 1px 2px rgba(14,18,38,.05), 0 6px 16px rgba(14,18,38,.06);
+  --sh2:0 2px 6px rgba(14,18,38,.07), 0 18px 44px rgba(14,18,38,.10);
+  --sans:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SFMono-Regular","Cascadia Code",Consolas,"Liberation Mono",monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1020;    --card:#141A31;       --card2:#1C2440;
+    --ink:#EDF0FA;      --ink2:#A6AECB;       --ink3:#7B84A5;
+    --line:#252E4E;     --line2:#1D2440;
+    --brand:#7C97FF;    --brand-ink:#0C1020;  --brand-soft:#1B2450;  --brand-glow:rgba(124,151,255,.30);
+    --coral:#FF7D6E;    --coral-soft:#38191A;
+    --amber:#F0B44B;    --amber-soft:#332616;
+    --emerald:#5FD79C;  --emerald-soft:#0F2D22;
+    --sh1:0 1px 2px rgba(0,0,0,.5), 0 6px 16px rgba(0,0,0,.35);
+    --sh2:0 2px 6px rgba(0,0,0,.5), 0 18px 44px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1020;      --card:#141A31;       --card2:#1C2440;
+  --ink:#EDF0FA;        --ink2:#A6AECB;       --ink3:#7B84A5;
+  --line:#252E4E;       --line2:#1D2440;
+  --brand:#7C97FF;      --brand-ink:#0C1020;  --brand-soft:#1B2450;  --brand-glow:rgba(124,151,255,.30);
+  --coral:#FF7D6E;      --coral-soft:#38191A;
+  --amber:#F0B44B;      --amber-soft:#332616;
+  --emerald:#5FD79C;    --emerald-soft:#0F2D22;
+  --sh1:0 1px 2px rgba(0,0,0,.5), 0 6px 16px rgba(0,0,0,.35);
+  --sh2:0 2px 6px rgba(0,0,0,.5), 0 18px 44px rgba(0,0,0,.45);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0; text-wrap:balance; letter-spacing:-.022em; line-height:1.14; font-weight:800}
+p{margin:0}
+button{font:inherit; color:inherit; border:0; background:none; cursor:pointer}
+a{color:var(--brand); text-decoration:none}
+svg{display:block; flex:none}
+:focus-visible{outline:2px solid var(--brand); outline-offset:3px; border-radius:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important; scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+
+.shell{max-width:1180px; margin:0 auto; padding:0 20px}
+.eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink3)}
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+.top{position:sticky; top:0; z-index:60; background:color-mix(in srgb, var(--paper) 88%, transparent);
+     backdrop-filter:blur(10px); border-bottom:1px solid var(--line)}
+.top-in{display:flex; align-items:center; gap:16px; height:62px}
+.brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.02em; font-size:17px}
+.mark{width:28px; height:28px; border-radius:8px; background:var(--brand); color:var(--brand-ink);
+      display:grid; place-items:center; flex:none}
+.top nav{display:flex; gap:4px; margin-left:12px}
+.top nav a{padding:7px 12px; border-radius:8px; color:var(--ink2); font-size:14px; font-weight:600;
+           transition:background .15s ease, color .15s ease}
+.top nav a:hover{background:var(--card2); color:var(--ink)}
+.spacer{flex:1}
+@media (max-width:820px){ .top nav{display:none} }
+
+/* Buttons */
+.btn{display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:9px;
+     font-weight:650; font-size:14.5px; transition:transform .12s ease, box-shadow .15s ease,
+     background .15s ease, border-color .15s ease}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brand); color:var(--brand-ink); box-shadow:0 1px 2px rgba(14,18,38,.16)}
+.btn-primary:hover{box-shadow:0 6px 18px var(--brand-glow)}
+.btn-ghost{border:1px solid var(--line); background:var(--card); color:var(--ink)}
+.btn-ghost:hover{border-color:var(--brand); color:var(--brand)}
+.btn-sm{padding:7px 12px; font-size:13.5px}
+
+/* Icon button + tooltip */
+.iconbtn{width:38px; height:38px; border-radius:9px; border:1px solid var(--line); background:var(--card);
+         display:grid; place-items:center; transition:border-color .15s ease, color .15s ease}
+.iconbtn:hover{border-color:var(--brand); color:var(--brand)}
+.tip{position:relative}
+.tip::after{
+  content:attr(data-tip); position:absolute; top:calc(100% + 9px); left:50%; transform:translateX(-50%) translateY(-4px);
+  background:var(--ink); color:var(--paper); font-size:12.5px; font-weight:600; white-space:nowrap;
+  padding:6px 10px; border-radius:7px; opacity:0; pointer-events:none;
+  transition:opacity .16s ease, transform .16s ease; z-index:70; box-shadow:var(--sh1);
+}
+.tip:hover::after,.tip:focus-visible::after{opacity:1; transform:translateX(-50%) translateY(0)}
+.tip.left::after{left:auto; right:0; transform:translateX(0) translateY(-4px)}
+.tip.left:hover::after{transform:translateX(0) translateY(0)}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{padding:74px 0 56px; position:relative; overflow:hidden}
+.hero::before{
+  content:""; position:absolute; inset:-40% 40% 40% -20%; pointer-events:none;
+  background:radial-gradient(closest-side, var(--brand-glow), transparent 70%); opacity:.55;
+}
+.hero-grid{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); gap:52px; align-items:center; position:relative}
+@media (max-width:940px){ .hero-grid{grid-template-columns:1fr; gap:36px} .hero{padding:48px 0 40px} }
+
+.badge{display:inline-flex; align-items:center; gap:8px; padding:6px 12px 6px 8px; border-radius:999px;
+       background:var(--brand-soft); color:var(--brand); font-size:13px; font-weight:650; margin-bottom:20px}
+.hero h1{font-size:clamp(36px,5.2vw,58px); margin-bottom:20px}
+.hero h1 em{font-style:normal; color:var(--brand)}
+.lede{font-size:clamp(17px,1.9vw,19.5px); color:var(--ink2); max-width:56ch; margin-bottom:28px}
+.cta{display:flex; flex-wrap:wrap; gap:12px; align-items:center}
+.hint{display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--ink3); margin-top:16px}
+
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:38px; max-width:520px}
+.stat{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px}
+.stat b{display:block; font-size:26px; font-weight:800; letter-spacing:-.03em; font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px; color:var(--ink3); line-height:1.35; display:block; margin-top:2px}
+@media (max-width:520px){ .stats{grid-template-columns:1fr 1fr} }
+
+/* Hero demo card */
+.demo{background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--sh2); overflow:hidden}
+.demo-top{display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid var(--line2); background:var(--card2)}
+.dot{width:10px; height:10px; border-radius:50%}
+.demo-title{font-family:var(--mono); font-size:12px; color:var(--ink3); margin-left:6px}
+.demo-body{padding:18px}
+.step{display:grid; grid-template-columns:30px 1fr; gap:12px; padding:11px 0; opacity:.28;
+      transition:opacity .45s ease, transform .45s ease; transform:translateY(4px)}
+.step.on{opacity:1; transform:none}
+.step + .step{border-top:1px solid var(--line2)}
+.step-ic{width:30px; height:30px; border-radius:8px; display:grid; place-items:center; background:var(--card2); color:var(--ink3)}
+.step.on .step-ic{background:var(--brand-soft); color:var(--brand)}
+.step h4{font-size:14.5px; font-weight:700; letter-spacing:-.01em}
+.step p{font-size:13px; color:var(--ink2); margin-top:2px}
+.step code{font-family:var(--mono); font-size:12px; background:var(--card2); padding:1px 5px; border-radius:4px; color:var(--ink)}
+.verdict-strip{margin-top:14px; border-radius:9px; padding:12px 14px; background:var(--coral-soft);
+               border:1px solid color-mix(in srgb, var(--coral) 30%, transparent); display:flex; gap:11px; align-items:flex-start;
+               opacity:0; transform:translateY(6px); transition:opacity .5s ease, transform .5s ease}
+.verdict-strip.on{opacity:1; transform:none}
+.verdict-strip b{color:var(--coral); font-size:14px}
+.verdict-strip p{font-size:12.5px; color:var(--ink2); margin-top:2px}
+
+/* ============================================================
+   SECTION CHROME
+   ============================================================ */
+section.band{padding:64px 0; border-top:1px solid var(--line)}
+.head{max-width:60ch; margin-bottom:32px}
+.head h2{font-size:clamp(26px,3.4vw,36px); margin:10px 0 12px}
+.head p{color:var(--ink2); font-size:17px}
+
+/* ============================================================
+   DASHBOARD (tabs + sidebar + filters)
+   ============================================================ */
+.dash{background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:var(--sh1); overflow:hidden}
+.tabs{display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); overflow-x:auto; background:var(--card2)}
+.tab{display:inline-flex; align-items:center; gap:8px; padding:11px 15px; border-radius:9px 9px 0 0;
+     font-size:14px; font-weight:650; color:var(--ink2); white-space:nowrap; position:relative;
+     transition:background .15s ease, color .15s ease}
+.tab:hover{background:color-mix(in srgb, var(--card) 60%, transparent); color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--card); color:var(--brand)}
+.tab[aria-selected="true"]::after{content:""; position:absolute; left:12px; right:12px; bottom:-1px; height:2px; background:var(--brand)}
+
+.dash-body{display:grid; grid-template-columns:246px minmax(0,1fr); min-height:430px}
+@media (max-width:880px){ .dash-body{grid-template-columns:1fr} }
+.side{border-right:1px solid var(--line); padding:18px; background:var(--card)}
+@media (max-width:880px){ .side{border-right:0; border-bottom:1px solid var(--line)} }
+.side h5{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink3); margin:0 0 10px; font-weight:600}
+.filters{display:flex; flex-direction:column; gap:6px}
+@media (max-width:880px){ .filters{flex-direction:row; flex-wrap:wrap} }
+.filter{display:flex; align-items:center; gap:9px; padding:9px 11px; border-radius:9px; font-size:13.5px;
+        font-weight:600; color:var(--ink2); border:1px solid transparent; text-align:left; width:100%;
+        transition:background .15s ease, color .15s ease, border-color .15s ease}
+@media (max-width:880px){ .filter{width:auto} }
+.filter:hover{background:var(--card2); color:var(--ink)}
+.filter[aria-pressed="true"]{background:var(--brand-soft); color:var(--brand); border-color:color-mix(in srgb,var(--brand) 32%,transparent)}
+.filter .n{margin-left:auto; font-family:var(--mono); font-size:12px; opacity:.75}
+.pip{width:8px; height:8px; border-radius:2px; flex:none}
+.pip.escalate{background:var(--coral)} .pip.needs{background:var(--amber)} .pip.resolve{background:var(--emerald)} .pip.all{background:var(--ink3)}
+
+.pane{padding:18px; min-width:0}
+
+/* Ticket rows */
+.tickets{display:flex; flex-direction:column; gap:9px}
+.ticket{display:grid; grid-template-columns:3px 1fr auto; gap:13px; align-items:center;
+        border:1px solid var(--line); border-radius:11px; background:var(--card); overflow:hidden;
+        text-align:left; width:100%; transition:border-color .15s ease, box-shadow .15s ease, transform .12s ease}
+.ticket:hover{border-color:var(--brand); box-shadow:var(--sh1); transform:translateY(-1px)}
+.ticket .bar{align-self:stretch}
+.bar.escalate{background:var(--coral)} .bar.needs{background:var(--amber)} .bar.resolve{background:var(--emerald)}
+.t-body{padding:12px 0; min-width:0}
+.t-id{font-family:var(--mono); font-size:11.5px; color:var(--ink3)}
+.t-sub{font-size:14.5px; font-weight:650; margin-top:1px; letter-spacing:-.01em}
+.t-meta{font-size:12.5px; color:var(--ink3); margin-top:3px; display:flex; flex-wrap:wrap; gap:4px 12px}
+.t-right{padding:12px 14px 12px 0; display:flex; align-items:center; gap:10px}
+
+.tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase;
+     padding:4px 8px; border-radius:5px; white-space:nowrap; font-weight:600}
+.tag.escalate{background:var(--coral-soft); color:var(--coral)}
+.tag.needs{background:var(--amber-soft); color:var(--amber)}
+.tag.resolve{background:var(--emerald-soft); color:var(--emerald)}
+.risk{font-family:var(--mono); font-size:15px; font-variant-numeric:tabular-nums; color:var(--ink3); min-width:30px; text-align:right}
+.risk.hot{color:var(--coral); font-weight:700}
+
+/* Skeleton */
+.sk{border:1px solid var(--line); border-radius:11px; padding:14px; display:grid; gap:9px}
+.sk-line{height:11px; border-radius:5px; background:linear-gradient(90deg,var(--card2) 25%,var(--line2) 37%,var(--card2) 63%);
+         background-size:400% 100%; animation:shimmer 1.3s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:100% 0} 100%{background-position:0 0}}
+
+/* Empty state */
+.empty{display:grid; place-items:center; text-align:center; padding:52px 20px; gap:6px}
+.empty-ic{width:52px; height:52px; border-radius:14px; background:var(--card2); color:var(--ink3); display:grid; place-items:center; margin-bottom:6px}
+.empty h4{font-size:16.5px}
+.empty p{font-size:14px; color:var(--ink2); max-width:38ch}
+
+/* Evidence tab */
+.eviwrap{display:grid; gap:12px}
+.evi{border:1px solid var(--line); border-radius:11px; padding:14px 16px; background:var(--card)}
+.evi-h{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap;
+       font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--ink3)}
+.joint{display:grid; grid-template-columns:28px 1fr; gap:0}
+.jrail{position:relative; display:flex; justify-content:center}
+.jrail::before{content:""; position:absolute; top:0; bottom:0; width:2px; left:calc(50% - 1px); border-radius:2px; background:var(--brand)}
+.joint.bad .jrail::before{background:repeating-linear-gradient(to bottom,var(--amber) 0 4px,transparent 4px 9px)}
+.jbody{padding:11px 0 11px 8px}
+.jlab{font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--brand); margin-bottom:4px}
+.joint.bad .jlab{color:var(--amber)}
+.jtxt{font-size:13.5px; color:var(--ink2)}
+.term{display:inline-block; font-family:var(--mono); font-size:12px; background:var(--brand-soft); color:var(--brand);
+      padding:2px 7px; border-radius:5px; margin:3px 5px 0 0}
+.scroll{overflow-x:auto}
+pre{margin:0; font-family:var(--mono); font-size:12.5px; line-height:1.6; background:var(--card2);
+    border:1px solid var(--line2); border-radius:9px; padding:12px 14px; overflow-x:auto; color:var(--ink)}
+pre .add{color:var(--emerald)} pre .del{color:var(--coral)} pre .dim{color:var(--ink3)}
+.loc{font-family:var(--mono); font-size:12px; color:var(--brand); display:block; margin-bottom:7px}
+
+table.mini{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px}
+table.mini th{text-align:left; font-weight:600; color:var(--ink3); font-size:10.5px; letter-spacing:.09em;
+              text-transform:uppercase; padding:0 14px 7px 0; white-space:nowrap}
+table.mini td{padding:6px 14px 6px 0; border-top:1px solid var(--line2); white-space:nowrap; vertical-align:top}
+table.mini td.l{color:var(--brand)} table.mini td.e{color:var(--coral)} table.mini td.w{color:var(--amber)}
+
+/* Results tab */
+.metrics{width:100%; border-collapse:collapse; font-size:13.5px}
+.metrics th{text-align:left; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+            color:var(--ink3); font-weight:600; padding:0 14px 9px 0; white-space:nowrap}
+.metrics td{padding:10px 14px 10px 0; border-top:1px solid var(--line2); font-variant-numeric:tabular-nums; white-space:nowrap}
+.metrics td:first-child{white-space:normal; min-width:190px}
+.g{color:var(--emerald); font-weight:700} .r{color:var(--coral); font-weight:700}
+.note{margin-top:16px; border-left:2px solid var(--line); padding-left:14px; font-size:13px; color:var(--ink3); max-width:72ch}
+
+/* Feature cards */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:16px}
+.card{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:22px;
+      transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease}
+.card:hover{transform:translateY(-3px); box-shadow:var(--sh2); border-color:color-mix(in srgb,var(--brand) 40%,transparent)}
+.card-ic{width:40px; height:40px; border-radius:11px; background:var(--brand-soft); color:var(--brand);
+         display:grid; place-items:center; margin-bottom:14px}
+.card h3{font-size:17px; margin-bottom:7px}
+.card p{font-size:14px; color:var(--ink2)}
+
+/* ============================================================
+   FEATURE TOUR — spotlight + tooltip
+   ============================================================ */
+.tour-hole{position:absolute; border-radius:12px; box-shadow:0 0 0 9999px rgba(6,9,22,.68), var(--ring);
+           z-index:90; pointer-events:none; transition:all .32s cubic-bezier(.4,0,.2,1)}
+.tour-pop{position:absolute; z-index:95; width:min(330px,calc(100vw - 32px)); background:var(--card);
+          border:1px solid var(--line); border-radius:13px; box-shadow:var(--sh2); padding:18px;
+          transition:all .32s cubic-bezier(.4,0,.2,1)}
+.tour-pop .eyebrow{margin-bottom:7px; color:var(--brand)}
+.tour-pop h4{font-size:16.5px; margin-bottom:7px}
+.tour-pop p{font-size:14px; color:var(--ink2)}
+.tour-nav{display:flex; align-items:center; gap:9px; margin-top:16px}
+.tour-nav .spacer{flex:1}
+.dots{display:flex; gap:5px}
+.dots i{width:6px; height:6px; border-radius:50%; background:var(--line); display:block; transition:background .2s ease, width .2s ease}
+.dots i.on{background:var(--brand); width:16px; border-radius:3px}
+.hidden{display:none!important}
+
+footer{border-top:1px solid var(--line); padding:30px 0 44px; color:var(--ink3); font-size:13.5px}
+.foot-in{display:flex; flex-wrap:wrap; gap:14px; align-items:center; justify-content:space-between}
+</style>
+
+<!-- ================= TOP BAR ================= -->
+<header class="top">
+  <div class="shell top-in">
+    <div class="brand">
+      <span class="mark" id="markIcon"></span> Warrant
+    </div>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#console">Live console</a>
+      <a href="#proof">Results</a>
+    </nav>
+    <span class="spacer"></span>
+    <button class="iconbtn tip left" id="themeBtn" data-tip="Switch to dark mode" aria-label="Switch colour theme"></button>
+    <button class="btn btn-primary btn-sm" id="tourBtn">
+      <span id="tourIcon"></span> Take the tour
+    </button>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="shell hero-grid">
+    <div>
+      <span class="badge"><span id="badgeIcon"></span> Autonomous Level 1 support engineer</span>
+      <h1>It reads the logs, finds the bug, and <em>refuses to guess.</em></h1>
+      <p class="lede">Warrant triages your support queue against real service logs and your real source
+        tree. Every escalation arrives with the log line and the line of code that prove it — and
+        anything it cannot prove goes to a human instead of being quietly closed.</p>
+      <div class="cta">
+        <button class="btn btn-primary" id="ctaConsole"><span id="ctaIcon"></span> See a real ticket</button>
+        <button class="btn btn-ghost" id="ctaTour">Show me around</button>
+      </div>
+      <p class="hint"><span id="hintIcon"></span> New here? &ldquo;Take the tour&rdquo; walks you through it in five steps.</p>
+
+      <div class="stats" id="statsRow">
+        <div class="stat"><b>8s</b><span>average time to a verified root cause</span></div>
+        <div class="stat"><b>0</b><span>fabricated citations reach a ticket</span></div>
+        <div class="stat"><b>139</b><span>tests, all offline</span></div>
+      </div>
+    </div>
+
+    <div class="demo" id="demoCard">
+      <div class="demo-top">
+        <span class="dot" style="background:#FF5F57"></span>
+        <span class="dot" style="background:#FEBC2E"></span>
+        <span class="dot" style="background:#28C840"></span>
+        <span class="demo-title">TCK-3021 &middot; investigating&hellip;</span>
+      </div>
+      <div class="demo-body" id="demoSteps"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="band" id="how">
+  <div class="shell">
+    <div class="head">
+      <span class="eyebrow">How it works</span>
+      <h2>Three checks stand between a hunch and your backlog</h2>
+      <p>Most triage bots hand you a confident paragraph. Warrant hands you a paragraph plus the
+        receipts, and throws away its own answer when the receipts do not hold up.</p>
+    </div>
+    <div class="cards" id="cardGrid"></div>
+  </div>
+</section>
+
+<!-- ================= LIVE CONSOLE ================= -->
+<section class="band" id="console">
+  <div class="shell">
+    <div class="head">
+      <span class="eyebrow">Live console</span>
+      <h2>Try it yourself</h2>
+      <p>A real run over eight tickets. Filter the queue, open a ticket, and inspect the evidence
+        behind every decision.</p>
+    </div>
+
+    <div class="dash" id="dash">
+      <div class="tabs" role="tablist" id="tablist">
+        <button class="tab" role="tab" data-tab="queue"    aria-selected="true"><span></span> Queue</button>
+        <button class="tab" role="tab" data-tab="evidence" aria-selected="false"><span></span> Evidence</button>
+        <button class="tab" role="tab" data-tab="patch"    aria-selected="false"><span></span> Candidate fix</button>
+        <button class="tab" role="tab" data-tab="results"  aria-selected="false"><span></span> Results</button>
+      </div>
+
+      <div class="dash-body">
+        <aside class="side" id="sidebar">
+          <h5>Filter by decision</h5>
+          <div class="filters" id="filters"></div>
+          <h5 style="margin-top:22px">Selected</h5>
+          <p style="font-size:13px;color:var(--ink2)" id="selLabel">TCK-3021</p>
+        </aside>
+        <div class="pane" id="pane"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section class="band" id="proof">
+  <div class="shell">
+    <div class="head">
+      <span class="eyebrow">Measured, including the misses</span>
+      <h2>What happens when you remove the safety net</h2>
+      <p>The same eight tickets, run four ways. The column that matters is the last one.</p>
+    </div>
+    <div class="scroll">
+      <table class="metrics">
+        <thead><tr>
+          <th>Configuration</th><th>Precision</th><th>Recall</th><th>F1</th><th>Wrong escalations</th><th>Bugs closed &amp; lost</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Basic classifier, closes on its own word</td><td>0.667</td><td>0.500</td><td>0.571</td><td>1</td><td class="r">2</td></tr>
+          <tr><td>Basic classifier, <b>second opinion on</b></td><td>0.750</td><td>0.750</td><td>0.750</td><td>1</td><td class="r">1</td></tr>
+          <tr><td>Tuned classifier, closes on its own word</td><td>0.800</td><td>1.000</td><td>0.889</td><td>1</td><td class="g">0</td></tr>
+          <tr><td>Tuned classifier, <b>second opinion on</b></td><td>0.800</td><td>1.000</td><td>0.889</td><td>1</td><td class="g">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><b>&ldquo;Bugs closed &amp; lost&rdquo; is the number to watch.</b> A bug sent to a human costs
+      time. A bug closed with a help article costs the bug — nobody looks again. One wrong escalation
+      survives every configuration, and the cited file is right only half the time; both are shown
+      here rather than rounded away.</p>
+    <p class="note">Figures come from deterministic stand-ins rather than live models, so they measure
+      the pipeline, not model accuracy. No API key was used.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="shell foot-in">
+    <span>Warrant &middot; interface concept for <b style="color:var(--ink2)">autonomous-saas-triager</b></span>
+    <span>Every ticket, log line and metric shown is real output from the repository.</span>
+  </div>
+</footer>
+
+<!-- Tour layer -->
+<div id="tourHole" class="tour-hole hidden"></div>
+<div id="tourPop" class="tour-pop hidden" role="dialog" aria-modal="true" aria-labelledby="tourTitle"></div>
+
+<script>
+/* ============================================================
+   1. ICONS — inline SVG so nothing is fetched from a CDN
+   ============================================================ */
+const I = (p, w = 20) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const ICON = {
+  shield:  I('<path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9.2 12.2l2 2 3.6-3.8"/>'),
+  search:  I('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>'),
+  link:    I('<path d="M9.5 14.5l5-5"/><path d="M13 7l1.5-1.5a3.5 3.5 0 015 5L18 12"/><path d="M11 17l-1.5 1.5a3.5 3.5 0 01-5-5L6 12"/>'),
+  code:    I('<path d="M9 18l-6-6 6-6"/><path d="M15 6l6 6-6 6"/>'),
+  scale:   I('<path d="M12 4v16"/><path d="M6 8h12"/><path d="M6 8l-3 6h6z"/><path d="M18 8l-3 6h6z"/>'),
+  alert:   I('<path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.5v.01"/>'),
+  sun:     I('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>'),
+  moon:    I('<path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>'),
+  play:    I('<path d="M7 4.5l12 7.5-12 7.5z"/>'),
+  arrow:   I('<path d="M4 12h15"/><path d="M13 6l6 6-6 6"/>'),
+  back:    I('<path d="M20 12H5"/><path d="M11 18l-6-6 6-6"/>'),
+  close:   I('<path d="M6 6l12 12M18 6L6 18"/>'),
+  info:    I('<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8v.01"/>', 16),
+  spark:   I('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>', 16),
+  inbox:   I('<path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 5h14l2 7v7H3v-7z"/>', 18),
+  file:    I('<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>', 18),
+  wrench:  I('<path d="M15 7a4 4 0 01-5.2 5.4L5 17.2 6.8 19l4.8-4.8A4 4 0 0017 9z"/>', 18),
+  chart:   I('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', 18),
+  empty:   I('<path d="M3 12h5l2 3h4l2-3h5"/><path d="M5 5h14l2 7v7H3v-7z"/>', 26),
+  user:    I('<circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6"/>', 16)
+};
+
+/* ============================================================
+   2. DATA — real output from the repository's offline run
+   ============================================================ */
+const TICKETS = [
+  { id:"TCK-3021", sub:"Cannot log in — page just keeps refreshing", acct:"Halberd Logistics",
+    state:"escalate", risk:96, tag:"Escalated", why:"OAuth callback built from the staging origin",
+    users:4, file:"src/auth/config.ts:39" },
+  { id:"TCK-6033", sub:"Password reset link says it has expired", acct:"Nyland Health",
+    state:"escalate", risk:60, tag:"Escalated", why:"Token TTL compares milliseconds to seconds",
+    users:3, file:"src/auth/reset.ts:38" },
+  { id:"TCK-4488", sub:"We were billed twice this month", acct:"Colwyn Foods",
+    state:"escalate", risk:52, tag:"Escalated", why:"Stripe retry with no idempotency check",
+    users:1, file:"src/billing/ledger.ts:23" },
+  { id:"TCK-9302", sub:"API returns 429 constantly since Monday", acct:"Brightlow Analytics",
+    state:"escalate", risk:52, tag:"Escalated", why:"Retry loop replays the burst with no backoff",
+    users:1, file:"src/api/rate_limit.ts:18" },
+  { id:"TCK-5210", sub:"Export keeps failing, this is broken", acct:"Ardith Retail Group",
+    state:"escalate", risk:28, tag:"Escalated", why:"320 MB export against a published 50 MB limit",
+    users:1, file:"src/exports/uploader.ts:17" },
+  { id:"TCK-7714", sub:"Dashboard is completely blank", acct:"Sable Consulting",
+    state:"needs", risk:0, tag:"Needs a human", why:"No server-side evidence exists either way",
+    users:0, file:"—" },
+  { id:"TCK-1102", sub:"How do I change my password?", acct:"Perrin & Vale",
+    state:"resolve", risk:0, tag:"Answered", why:"A genuine how-to; KB-0012 answers it",
+    users:0, file:"—" },
+  { id:"TCK-8890", sub:"Please add a dark mode", acct:"Tessin Media",
+    state:"resolve", risk:0, tag:"Answered", why:"Feature request, passed to product",
+    users:0, file:"—" }
+];
+
+const FILTERS = [
+  { key:"all",      label:"Everything",     pip:"all" },
+  { key:"escalate", label:"Escalated",      pip:"escalate" },
+  { key:"needs",    label:"Needs a human",  pip:"needs" },
+  { key:"resolve",  label:"Answered",       pip:"resolve" },
+  /* Always empty, on purpose — no ticket can ever carry this state. It is the
+     one guarantee the product makes, so it gets a filter of its own. */
+  { key:"unreviewed", label:"Closed unchecked", pip:"all" }
+];
+
+const CARDS = [
+  { ic:"search", h:"It looks before it speaks",
+    p:"Searches your logs for the customer's own session, reads the healthy lines around the error, then checks whether other accounts hit the same thing." },
+  { ic:"link", h:"It has to show the connection",
+    p:"A quote is not enough. The words in the error must actually overlap the words in the code it blames, and the logs must trace back to this customer — or the escalation is blocked." },
+  { ic:"scale", h:"A second model tries to prove it wrong",
+    p:"Before any ticket is closed, a different model from a different lab gets a wider view and one instruction: find the bug anyway. If it can, the ticket reopens." },
+  { ic:"code", h:"Its patches actually apply",
+    p:"The model never writes a diff. It points at the exact text to change; the tool finds that text in the real file and produces the diff itself." }
+];
+
+/* ============================================================
+   3. THEME TOGGLE
+   ============================================================ */
+const root = document.documentElement, themeBtn = document.getElementById("themeBtn");
+const prefersDark = () => matchMedia("(prefers-color-scheme: dark)").matches;
+let dark = prefersDark();
+function paintTheme(){
+  root.setAttribute("data-theme", dark ? "dark" : "light");
+  themeBtn.innerHTML = dark ? ICON.sun : ICON.moon;
+  themeBtn.dataset.tip = dark ? "Switch to light mode" : "Switch to dark mode";
+}
+themeBtn.addEventListener("click", () => { dark = !dark; paintTheme(); });
+paintTheme();
+
+/* Static icons */
+document.getElementById("markIcon").innerHTML = I('<path d="M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6z"/><path d="M9.2 12.2l2 2 3.6-3.8"/>', 17);
+document.getElementById("tourIcon").innerHTML = ICON.spark;
+document.getElementById("badgeIcon").innerHTML = ICON.shield;
+document.getElementById("ctaIcon").innerHTML   = ICON.play;
+document.getElementById("hintIcon").innerHTML  = ICON.info;
+document.getElementById("cardGrid").innerHTML = CARDS.map(c =>
+  `<article class="card"><div class="card-ic">${ICON[c.ic]}</div><h3>${c.h}</h3><p>${c.p}</p></article>`).join("");
+[["queue",ICON.inbox],["evidence",ICON.file],["patch",ICON.wrench],["results",ICON.chart]]
+  .forEach(([k,ic]) => document.querySelector(`.tab[data-tab="${k}"] span`).innerHTML = ic);
+
+/* ============================================================
+   4. HERO DEMO — a short, looping investigation
+   ============================================================ */
+const DEMO = [
+  { ic:"search", h:"Reading the logs",   p:"3 failures for <code>usr_8812</code>, plus 3 more accounts hitting the same error." },
+  { ic:"code",   h:"Searching the code", p:"Matched <code>redirect_uri</code> in the logs to <code>redirectUri</code> in source." },
+  { ic:"link",   h:"Checking the link",  p:"5 shared terms tie the error to <code>config.ts:39</code>." },
+  { ic:"shield", h:"Both checks hold",   p:"Evidence traces back to this customer and to this file." }
+];
+document.getElementById("demoSteps").innerHTML =
+  DEMO.map((s,i) => `<div class="step" data-i="${i}"><div class="step-ic">${ICON[s.ic]}</div>
+    <div><h4>${s.h}</h4><p>${s.p}</p></div></div>`).join("") +
+  `<div class="verdict-strip" id="verdict"><span style="color:var(--coral)">${ICON.alert}</span>
+     <div><b>Escalated &mdash; critical, 96/100</b>
+     <p>Callback URL points at staging. Sent to engineering as SUP-5353 with the log line and the code attached.</p></div>
+   </div>`;
+
+const stepEls = [...document.querySelectorAll(".step")], verdict = document.getElementById("verdict");
+let demoTimer;
+function runDemo(){
+  stepEls.forEach(e => e.classList.remove("on"));
+  verdict.classList.remove("on");
+  let i = 0;
+  clearInterval(demoTimer);
+  demoTimer = setInterval(() => {
+    if (i < stepEls.length) stepEls[i].classList.add("on");
+    else if (i === stepEls.length) verdict.classList.add("on");
+    else { clearInterval(demoTimer); setTimeout(runDemo, 3600); }
+    i++;
+  }, 720);
+}
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches) runDemo();
+else { stepEls.forEach(e => e.classList.add("on")); verdict.classList.add("on"); }
+
+/* ============================================================
+   5. DASHBOARD — tabs, filters, skeletons, empty state
+   ============================================================ */
+let activeTab = "queue", activeFilter = "all", selected = "TCK-3021";
+const pane = document.getElementById("pane"), selLabel = document.getElementById("selLabel");
+
+document.getElementById("filters").innerHTML = FILTERS.map(f => {
+  const n = f.key === "all" ? TICKETS.length : TICKETS.filter(t => t.state === f.key).length;
+  return `<button class="filter" data-f="${f.key}" aria-pressed="${f.key === activeFilter}">
+    <span class="pip ${f.pip}"></span>${f.label}<span class="n">${n}</span></button>`;
+}).join("");
+
+function skeleton(rows = 4){
+  return `<div style="display:grid;gap:9px">` +
+    Array.from({length: rows}, () => `<div class="sk">
+      <div class="sk-line" style="width:26%"></div>
+      <div class="sk-line" style="width:72%"></div>
+      <div class="sk-line" style="width:44%"></div></div>`).join("") + `</div>`;
+}
+
+function queueView(){
+  const list = activeFilter === "all" ? TICKETS : TICKETS.filter(t => t.state === activeFilter);
+  if (!list.length){
+    const guarantee = activeFilter === "unreviewed";
+    return `<div class="empty"><div class="empty-ic" ${guarantee
+        ? 'style="background:var(--emerald-soft);color:var(--emerald)"' : ""}>${
+        guarantee ? ICON.shield : ICON.empty}</div>
+      <h4>${guarantee ? "Empty, and it stays empty" : "Nothing in this view"}</h4>
+      <p>${guarantee
+        ? "No ticket was ever closed without a second model checking it first. If the checker is unavailable, the ticket goes to a person instead — so this list has nothing to show you."
+        : "No ticket in this run ended up here. Try &ldquo;Everything&rdquo; to see the full queue of eight."}</p>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px" data-reset="1">Back to all eight</button></div>`;
+  }
+  return `<div class="tickets">` + list.map(t => `
+    <button class="ticket" data-t="${t.id}">
+      <span class="bar ${t.state}"></span>
+      <span class="t-body">
+        <span class="t-id">${t.id}</span>
+        <span class="t-sub">${t.sub}</span>
+        <span class="t-meta"><span>${t.acct}</span><span>${t.why}</span></span>
+      </span>
+      <span class="t-right">
+        <span class="tag ${t.state}">${t.tag}</span>
+        <span class="risk ${t.risk >= 70 ? "hot" : ""}">${t.risk || "—"}</span>
+      </span>
+    </button>`).join("") + `</div>`;
+}
+
+function evidenceView(){
+  const t = TICKETS.find(x => x.id === selected);
+  const proven = t.state !== "needs";
+  return `<div class="eviwrap">
+    <div class="evi"><div class="evi-h"><span>Ticket</span><span>${t.acct}</span></div>
+      <div style="font-size:14px;margin-top:7px">${t.sub}</div></div>
+
+    <div class="joint ${proven ? "" : "bad"}"><div class="jrail"></div><div class="jbody">
+      <div class="jlab">Check 1 &middot; does this evidence belong to this customer?</div>
+      <div class="jtxt">${proven
+        ? `Yes — their account appears in every cited log line.`
+        : `No — nothing in the logs mentions this customer or anything they described.`}</div></div></div>
+
+    <div class="evi"><div class="evi-h"><span>Logs</span><span>${proven ? t.users + " account" + (t.users === 1 ? "" : "s") + " affected" : "none recorded"}</span></div>
+      <div style="margin-top:9px" class="scroll">${proven ? `<table class="mini">
+        <thead><tr><th>Where</th><th>Level</th><th>Error</th></tr></thead><tbody>
+        <tr><td class="l">auth-svc-2026-08-14.log:3</td><td class="e">ERROR</td><td>OAUTH_REDIRECT_MISMATCH</td></tr>
+        <tr><td class="l">auth-svc-2026-08-14.log:8</td><td class="e">ERROR</td><td>OAUTH_REDIRECT_MISMATCH</td></tr>
+        <tr><td class="l">auth-svc-2026-08-14.log:9</td><td class="e">ERROR</td><td>OAUTH_REDIRECT_MISMATCH</td></tr>
+        </tbody></table>`
+        : `<p style="font-size:13.5px;color:var(--ink2)">A blank dashboard renders in the browser, so
+           the server logs stay clean. The absence is the finding, not a gap to fill with a guess.</p>`}
+      </div></div>
+
+    <div class="joint ${proven ? "" : "bad"}"><div class="jrail"></div><div class="jbody">
+      <div class="jlab">Check 2 &middot; does the blamed code match the error?</div>
+      <div class="jtxt">${proven
+        ? `Shared words between the error and the code:<br>
+           ${["auth","callback","redirect","staging","uri"].map(w => `<span class="term">${w}</span>`).join(" ")}`
+        : `Nothing to compare — no code was cited, and none is shown. Source with no failure attached
+           is raw material for an invention.`}</div></div></div>
+
+    <div class="evi"><div class="evi-h"><span>Code</span><span>${proven ? "verified against the file" : "nothing cited"}</span></div>
+      <div style="margin-top:9px">${proven
+        ? `<span class="loc">${t.file}</span><pre>  redirectUri: \`\${STAGING_ORIGIN}/auth/callback\`,</pre>`
+        : `<p style="font-size:13.5px;color:var(--ink2)">Routed to a person, with a request for a browser
+           console capture — never closed.</p>`}</div></div>
+
+    <div style="font-size:13.5px;color:${proven ? "var(--ink2)" : "var(--amber)"}">
+      ${proven ? "Both checks hold, so this can go to engineering."
+               : "A check failed, so this cannot be escalated <b>or</b> closed."}</div>
+  </div>`;
+}
+
+function patchView(){
+  const t = TICKETS.find(x => x.id === selected);
+  if (t.state === "needs") return `<div class="empty"><div class="empty-ic">${ICON.empty}</div>
+    <h4>No fix to propose</h4><p>${t.id} has no verified cause, so there is nothing to patch.
+    A fix without a confirmed cause is a guess with a diff attached.</p></div>`;
+  return `<div class="eviwrap">
+    <div class="evi"><div class="evi-h"><span>Proposed change</span><span>${t.file}</span></div>
+      <pre style="margin-top:10px"><span class="dim">--- a/src/auth/config.ts
++++ b/src/auth/config.ts
+@@ -36,6 +36,7 @@</span>
+   tokenUrl: "https://meridian.okta.com/oauth2/v1/token",
+<span class="add">+  // TODO(triage): verified as the cited cause</span>
+   redirectUri: &#96;&#36;{STAGING_ORIGIN}/auth/callback&#96;,
+   scopes: ["openid", "profile", "email", "offline_access"],</pre></div>
+    <div class="evi"><div class="evi-h"><span>Why you can trust the diff</span></div>
+      <p style="font-size:13.5px;color:var(--ink2);margin-top:8px">The model never wrote this diff. It
+      named the exact line to change; the tool located that line in the real file, checked it appears
+      only once, and generated the patch from the actual before and after — so it applies by
+      construction. An anchor that is missing or ambiguous is rejected and the reason is attached to
+      the ticket.</p></div>
+  </div>`;
+}
+
+function resultsView(){
+  return `<div class="scroll"><table class="metrics">
+    <thead><tr><th>Ticket</th><th>Decision</th><th>Risk</th><th>Cited file</th></tr></thead>
+    <tbody>${TICKETS.map(t => `<tr>
+      <td><b>${t.id}</b><br><span style="color:var(--ink3);font-size:12.5px">${t.sub}</span></td>
+      <td><span class="tag ${t.state}">${t.tag}</span></td>
+      <td style="font-family:var(--mono)">${t.risk || "—"}</td>
+      <td style="font-family:var(--mono);font-size:12.5px;color:var(--ink2)">${t.file}</td>
+    </tr>`).join("")}</tbody></table></div>
+    <p class="note">Two of these are wrong and the system cannot tell: <b>TCK-5210</b> is a documented
+    export limit working correctly, and <b>TCK-9302</b> blames the rate limiter when the fault is in
+    the retry loop. Both are counted against it in the scoring.</p>`;
+}
+
+const VIEWS = { queue:queueView, evidence:evidenceView, patch:patchView, results:resultsView };
+
+function render({ skeletonFirst = true } = {}){
+  selLabel.textContent = selected;
+  if (skeletonFirst && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+    pane.innerHTML = skeleton(activeTab === "queue" ? 4 : 3);
+    setTimeout(() => { pane.innerHTML = VIEWS[activeTab](); }, 420);
+  } else {
+    pane.innerHTML = VIEWS[activeTab]();
+  }
+}
+
+document.getElementById("tablist").addEventListener("click", e => {
+  const tab = e.target.closest(".tab"); if (!tab) return;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t === tab)));
+  activeTab = tab.dataset.tab; render();
+});
+document.getElementById("filters").addEventListener("click", e => {
+  const f = e.target.closest(".filter"); if (!f) return;
+  activeFilter = f.dataset.f;
+  document.querySelectorAll(".filter").forEach(b => b.setAttribute("aria-pressed", String(b === f)));
+  activeTab = "queue";
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === "queue")));
+  render();
+});
+pane.addEventListener("click", e => {
+  const row = e.target.closest("[data-t]");
+  if (row){ selected = row.dataset.t; activeTab = "evidence";
+    document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.tab === "evidence")));
+    render(); return; }
+  if (e.target.closest("[data-reset]")){
+    activeFilter = "all";
+    document.querySelectorAll(".filter").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === "all")));
+    render();
+  }
+});
+render({ skeletonFirst:false });
+
+document.getElementById("ctaConsole").addEventListener("click", () =>
+  document.getElementById("console").scrollIntoView({ block:"start" }));
+
+/* ============================================================
+   6. FEATURE TOUR — spotlight, tooltip, keyboard
+   ============================================================ */
+const STEPS = [
+  { el:"#demoCard",  t:"Watch it think",
+    d:"Every run starts here: read the logs, search the code, then check the two links between them. Nothing is asserted that has not been looked up." },
+  { el:"#dash",      t:"The live console",
+    d:"A real run over eight tickets. The four tabs move from the queue, to the evidence, to the proposed fix, to how it scored." },
+  { el:"#sidebar",   t:"Filter the queue",
+    d:"Click a decision to narrow the list. Amber means the agent refused to answer — that is a feature, not a gap." },
+  { el:"#tablist",   t:"Open the evidence",
+    d:"Click any ticket, then the Evidence tab, to see the log lines and the exact line of code behind the verdict." },
+  { el:"#themeBtn",  t:"Make it yours",
+    d:"Light and dark both ship finished. That is the whole tour — have a click around." }
+];
+const hole = document.getElementById("tourHole"), pop = document.getElementById("tourPop");
+let step = -1;
+
+function place(i){
+  const s = STEPS[i], target = document.querySelector(s.el);
+  if (!target) return endTour();
+  target.scrollIntoView({ block:"center", behavior:"smooth" });
+  setTimeout(() => {
+    const r = target.getBoundingClientRect(), pad = 8;
+    const top = r.top + scrollY - pad, left = r.left + scrollX - pad;
+    hole.style.cssText = `top:${top}px;left:${left}px;width:${r.width + pad*2}px;height:${r.height + pad*2}px`;
+    hole.classList.remove("hidden");
+
+    pop.innerHTML = `<div class="eyebrow">Step ${i+1} of ${STEPS.length}</div>
+      <h4 id="tourTitle">${s.t}</h4><p>${s.d}</p>
+      <div class="tour-nav">
+        <div class="dots">${STEPS.map((_,k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</div>
+        <span class="spacer"></span>
+        ${i > 0 ? `<button class="btn btn-ghost btn-sm" data-go="-1">Back</button>` : ""}
+        <button class="btn btn-primary btn-sm" data-go="1">
+          ${i === STEPS.length - 1 ? "Finish" : "Next"} ${i === STEPS.length - 1 ? "" : ICON.arrow}</button>
+      </div>
+      <button class="iconbtn btn-sm" data-go="0" aria-label="Close the tour"
+        style="position:absolute;top:10px;right:10px;width:30px;height:30px;border:0">${ICON.close}</button>`;
+    pop.classList.remove("hidden");
+
+    /* Keep the popover on screen: prefer below, flip above when it would overflow. */
+    const pr = pop.getBoundingClientRect();
+    let pTop = r.bottom + scrollY + 14;
+    if (r.bottom + pr.height + 24 > innerHeight) pTop = r.top + scrollY - pr.height - 14;
+    if (pTop < scrollY + 8) pTop = scrollY + 8;
+    let pLeft = r.left + scrollX;
+    pLeft = Math.min(Math.max(pLeft, scrollX + 12), scrollX + innerWidth - pr.width - 12);
+    pop.style.top = pTop + "px"; pop.style.left = pLeft + "px";
+  }, 320);
+}
+function startTour(){ step = 0; place(step); document.addEventListener("keydown", tourKeys); }
+function endTour(){ step = -1; hole.classList.add("hidden"); pop.classList.add("hidden");
+  document.removeEventListener("keydown", tourKeys); }
+function tourKeys(e){
+  if (e.key === "Escape") endTour();
+  if (e.key === "ArrowRight" && step < STEPS.length - 1) place(++step);
+  if (e.key === "ArrowLeft"  && step > 0) place(--step);
+}
+pop.addEventListener("click", e => {
+  const b = e.target.closest("[data-go]"); if (!b) return;
+  const dir = Number(b.dataset.go);
+  if (dir === 0) return endTour();
+  const next = step + dir;
+  if (next < 0 || next >= STEPS.length) return endTour();
+  step = next; place(step);
+});
+document.getElementById("tourBtn").addEventListener("click", startTour);
+document.getElementById("ctaTour").addEventListener("click", startTour);
+addEventListener("resize", () => { if (step >= 0) place(step); });
+</script>

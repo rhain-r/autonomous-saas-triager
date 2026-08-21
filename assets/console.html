@@ -1,0 +1,726 @@
+<title>Meridian Triage Console</title>
+<style>
+  /* ---- Tokens: complete light palette on bare :root ------------------- */
+  :root {
+    --ground:   #F2F6F6;
+    --surface:  #FFFFFF;
+    --surface2: #E8EFEF;
+    --ink:      #0B1719;
+    --muted:    #56696C;
+    --line:     #D2DEDE;
+    --line-soft:#E4ECEC;
+    --accent:   #0B6E79;
+    --accent-soft:#DDF0F2;
+    --escalate: #B01F28;
+    --escalate-soft:#FBE7E8;
+    --hold:     #8A5A00;
+    --hold-soft:#FBF0DC;
+    --resolve:  #166B3E;
+    --resolve-soft:#E0F2E8;
+    --shadow:   0 1px 2px rgba(11,23,25,.06), 0 8px 24px rgba(11,23,25,.05);
+
+    --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "Consolas", "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #081113;
+      --surface:  #0F1B1E;
+      --surface2: #152628;
+      --ink:      #E2ECED;
+      --muted:    #8DA3A6;
+      --line:     #20343A;
+      --line-soft:#182B2F;
+      --accent:   #45C4D1;
+      --accent-soft:#0D2E33;
+      --escalate: #FF8288;
+      --escalate-soft:#2C1214;
+      --hold:     #EDBA55;
+      --hold-soft:#2A2010;
+      --resolve:  #63D69B;
+      --resolve-soft:#0C2618;
+      --shadow:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.32);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:   #081113;
+    --surface:  #0F1B1E;
+    --surface2: #152628;
+    --ink:      #E2ECED;
+    --muted:    #8DA3A6;
+    --line:     #20343A;
+    --line-soft:#182B2F;
+    --accent:   #45C4D1;
+    --accent-soft:#0D2E33;
+    --escalate: #FF8288;
+    --escalate-soft:#2C1214;
+    --hold:     #EDBA55;
+    --hold-soft:#2A2010;
+    --resolve:  #63D69B;
+    --resolve-soft:#0C2618;
+    --shadow:   0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.32);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px 72px; }
+
+  /* ---- Masthead ------------------------------------------------------- */
+  .mast { padding: 40px 0 26px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 14px;
+  }
+  .mast h1 {
+    font-family: var(--serif); font-weight: 600; font-size: clamp(30px, 4vw, 44px);
+    line-height: 1.1; margin: 0 0 14px; text-wrap: balance; letter-spacing: -.01em;
+  }
+  .thesis {
+    font-family: var(--serif); font-size: clamp(16px, 1.7vw, 19px); font-style: italic;
+    color: var(--muted); margin: 0; max-width: 62ch; text-wrap: balance;
+  }
+  .runbar {
+    display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 22px;
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .runbar b { color: var(--ink); font-weight: 600; }
+
+  /* ---- Console grid --------------------------------------------------- */
+  .console { display: grid; grid-template-columns: 336px minmax(0, 1fr); gap: 28px; margin-top: 28px; align-items: start; }
+  @media (max-width: 980px) { .console { grid-template-columns: 1fr; } }
+
+  .panel-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 10px; display: flex; justify-content: space-between; align-items: baseline;
+  }
+
+  /* ---- Queue rail ----------------------------------------------------- */
+  .queue { display: flex; flex-direction: column; gap: 6px; position: sticky; top: 20px; }
+  @media (max-width: 980px) { .queue { position: static; } }
+  .row {
+    display: grid; grid-template-columns: 4px 1fr auto; gap: 12px; align-items: start;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 5px;
+    padding: 0; text-align: left; cursor: pointer; font: inherit; color: inherit;
+    overflow: hidden; transition: border-color .12s ease, transform .12s ease;
+  }
+  .row:hover { border-color: var(--accent); }
+  .row[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .stripe { align-self: stretch; }
+  .stripe.escalate { background: var(--escalate); }
+  .stripe.needs_human { background: var(--hold); }
+  .stripe.resolve { background: var(--resolve); }
+  .row-body { padding: 11px 0; min-width: 0; }
+  .row-id { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .02em; }
+  .row-subj { font-size: 13.5px; line-height: 1.4; margin-top: 2px; }
+  .row-acct { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .row-risk {
+    font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums;
+    padding: 11px 13px 11px 0; color: var(--muted);
+  }
+  .row-risk.hot { color: var(--escalate); font-weight: 600; }
+
+  /* ---- Chips ---------------------------------------------------------- */
+  .chip {
+    display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 3px; white-space: nowrap;
+  }
+  .chip.escalate { background: var(--escalate-soft); color: var(--escalate); }
+  .chip.needs_human { background: var(--hold-soft); color: var(--hold); }
+  .chip.resolve { background: var(--resolve-soft); color: var(--resolve); }
+  .chip.plain { background: var(--surface2); color: var(--muted); }
+  .term {
+    display: inline-block; font-family: var(--mono); font-size: 12px;
+    background: var(--accent-soft); color: var(--accent); padding: 2px 7px;
+    border-radius: 3px; margin: 2px 4px 2px 0;
+  }
+
+  /* ---- Case file ------------------------------------------------------ */
+  .case { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); overflow: hidden; }
+  .case-head { padding: 22px 26px; border-bottom: 1px solid var(--line); }
+  .case-head h2 { font-family: var(--serif); font-size: 24px; font-weight: 600; margin: 6px 0 8px; line-height: 1.22; text-wrap: balance; }
+  .case-meta { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .verdict { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+  .quote {
+    margin: 16px 0 0; padding: 12px 16px; background: var(--surface2);
+    border-left: 2px solid var(--line); font-size: 14px; color: var(--muted); border-radius: 0 4px 4px 0;
+  }
+
+  .sect { padding: 22px 26px; border-top: 1px solid var(--line-soft); }
+  .sect:first-of-type { border-top: 0; }
+  .sect h3 {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 14px; font-weight: 500;
+  }
+  .finding { font-family: var(--serif); font-size: 18px; line-height: 1.45; margin: 0 0 4px; text-wrap: balance; }
+
+  /* ---- The evidence chain (the hero) ---------------------------------- */
+  .chain { display: grid; gap: 0; }
+  .node {
+    border: 1px solid var(--line); border-radius: 5px; background: var(--surface);
+    padding: 13px 16px;
+  }
+  .node-head {
+    display: flex; align-items: baseline; gap: 10px; justify-content: space-between;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  }
+  .node-body { margin-top: 9px; }
+
+  .joint { display: grid; grid-template-columns: 34px 1fr; align-items: stretch; }
+  .joint-rail { display: flex; justify-content: center; position: relative; }
+  .joint-rail::before {
+    content: ""; width: 2px; background: var(--accent); border-radius: 2px;
+    position: absolute; top: 0; bottom: 0; left: calc(50% - 1px);
+  }
+  .joint.broken .joint-rail::before {
+    background: repeating-linear-gradient(to bottom, var(--hold) 0 4px, transparent 4px 9px);
+  }
+  .joint-proof { padding: 12px 0 12px 6px; }
+  .joint-label {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 5px;
+  }
+  .joint.broken .joint-label { color: var(--hold); }
+  .joint-text { font-size: 13.5px; color: var(--muted); }
+  .joint-text .lit { color: var(--ink); font-family: var(--mono); font-size: 12.5px; }
+
+  /* ---- Data surfaces -------------------------------------------------- */
+  .scroll { overflow-x: auto; }
+  table.logs { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+  table.logs th {
+    text-align: left; font-weight: 500; color: var(--muted); padding: 0 14px 7px 0;
+    letter-spacing: .08em; text-transform: uppercase; font-size: 10.5px; white-space: nowrap;
+  }
+  table.logs td { padding: 5px 14px 5px 0; border-top: 1px solid var(--line-soft); white-space: nowrap; vertical-align: top; }
+  table.logs td.loc { color: var(--accent); }
+  table.logs td.lvl { color: var(--escalate); font-size: 11px; letter-spacing: .05em; }
+  table.logs td.lvl.warn { color: var(--hold); }
+  table.logs td.msg { white-space: normal; color: var(--muted); min-width: 260px; }
+  .u { color: var(--ink); }
+
+  pre {
+    margin: 0; font-family: var(--mono); font-size: 12.5px; line-height: 1.62;
+    background: var(--surface2); border: 1px solid var(--line-soft); border-radius: 5px;
+    padding: 13px 15px; overflow-x: auto; color: var(--ink);
+  }
+  .loc {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    display: block; margin-bottom: 7px;
+  }
+  .diff .add { color: var(--resolve); }
+  .diff .del { color: var(--escalate); }
+  .diff .hunk { color: var(--muted); }
+  .diff .meta { color: var(--muted); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 5px 18px; font-size: 13.5px; }
+  .kv dt { font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; padding-top: 3px; }
+  .kv dd { margin: 0; }
+
+  .callout {
+    border: 1px solid var(--line); border-left: 3px solid var(--hold);
+    background: var(--hold-soft); border-radius: 0 5px 5px 0; padding: 14px 16px;
+  }
+  .callout.good { border-left-color: var(--resolve); background: var(--resolve-soft); }
+  .callout h4 {
+    margin: 0 0 6px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--hold); font-weight: 600;
+  }
+  .callout.good h4 { color: var(--resolve); }
+  .callout p { margin: 0; font-size: 13.5px; color: var(--ink); }
+  .callout p + p { margin-top: 8px; }
+
+  .reply { font-size: 14px; line-height: 1.62; white-space: pre-wrap; max-width: 66ch; }
+
+  ol.trace { list-style: none; counter-reset: t; margin: 0; padding: 0; font-family: var(--mono); font-size: 12px; }
+  ol.trace li {
+    counter-increment: t; display: grid; grid-template-columns: 26px 1fr auto;
+    gap: 12px; padding: 5px 0; border-top: 1px solid var(--line-soft); align-items: baseline;
+  }
+  ol.trace li::before { content: counter(t); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tool { color: var(--accent); }
+  .args { color: var(--muted); word-break: break-word; }
+  .count { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+
+  ul.notes { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--muted); }
+  ul.notes li { margin: 3px 0; }
+  ul.notes code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+
+  /* ---- Eval strip ----------------------------------------------------- */
+  .eval { margin-top: 40px; border-top: 1px solid var(--line); padding-top: 28px; }
+  .eval h2 { font-family: var(--serif); font-size: 22px; font-weight: 600; margin: 0 0 6px; }
+  .eval > p { color: var(--muted); font-size: 14px; margin: 0 0 20px; max-width: 68ch; }
+  table.metrics { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.metrics th {
+    text-align: left; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 0 16px 9px 0; white-space: nowrap;
+  }
+  table.metrics td { padding: 9px 16px 9px 0; border-top: 1px solid var(--line-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.metrics td:first-child { white-space: normal; min-width: 210px; }
+  table.metrics .num { font-family: var(--mono); }
+  .silent-0 { color: var(--resolve); font-weight: 600; }
+  .silent-n { color: var(--escalate); font-weight: 600; }
+  .caveat {
+    margin-top: 18px; font-size: 13px; color: var(--muted); border-left: 2px solid var(--line);
+    padding-left: 14px; max-width: 72ch;
+  }
+  footer { margin-top: 34px; padding-top: 18px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="eyebrow">Autonomous SaaS Bug Triager &middot; Level 1 support agent</p>
+    <h1>Meridian Triage Console</h1>
+    <p class="thesis">Every decision below is shown with the receipt that earned it. Nothing reaches
+      engineering, or the customer, that the system cannot quote.</p>
+    <div class="runbar">
+      <span>run <b>2026-08-21 08:32 UTC</b></span>
+      <span>queue <b>8</b> tickets</span>
+      <span>investigator <b>claude-sonnet-5</b></span>
+      <span>challenger <b>gemini-2.5-pro</b></span>
+      <span>fabricated citations rejected <b>0</b></span>
+    </div>
+  </header>
+
+  <div class="console">
+    <section>
+      <p class="panel-label"><span>Queue</span><span>risk</span></p>
+      <div class="queue" id="queue" role="list"></div>
+    </section>
+    <section id="case" aria-live="polite"></section>
+  </div>
+
+  <section class="eval">
+    <h2>Does the challenger pay for itself?</h2>
+    <p>Eight tickets, each with a hand-written answer key. The positive class is
+      &ldquo;this is a real defect and must reach engineering&rdquo;, so a false positive means
+      telling a developer to investigate something that works.</p>
+    <div class="scroll">
+      <table class="metrics">
+        <thead>
+          <tr>
+            <th>Configuration</th><th>Precision</th><th>Recall</th><th>F1</th>
+            <th>False esc.</th><th>Silent closures</th><th>Right file</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Keyword-only classifier, closes unguarded</td><td class="num">0.667</td><td class="num">0.500</td><td class="num">0.571</td><td class="num">1</td><td class="num silent-n">2</td><td class="num">1/2</td></tr>
+          <tr><td>Keyword-only classifier, <b>+ challenger</b></td><td class="num">0.750</td><td class="num">0.750</td><td class="num">0.750</td><td class="num">1</td><td class="num silent-n">1</td><td class="num">2/3</td></tr>
+          <tr><td>Signal-aware classifier, closes unguarded</td><td class="num">0.800</td><td class="num">1.000</td><td class="num">0.889</td><td class="num">1</td><td class="num silent-0">0</td><td class="num">2/4</td></tr>
+          <tr><td>Signal-aware classifier, <b>+ challenger</b></td><td class="num">0.800</td><td class="num">1.000</td><td class="num">0.889</td><td class="num">1</td><td class="num silent-0">0</td><td class="num">2/4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caveat"><b>Silent closures is the column that matters.</b> A defect routed to a human is
+      expensive and safe; one that is closed with a help article is neither, because nobody looks
+      again. One false escalation survives every configuration &mdash; TCK&#8209;5210, an export over a
+      documented limit &mdash; and attribution is correct only half the time. Both are reported here
+      rather than rounded up.</p>
+    <p class="caveat">These numbers come from deterministic lexical stand-ins, not language models.
+      They measure pipeline behaviour &mdash; the evidence gate, the challenge routing, the patch gate
+      &mdash; and say nothing about model accuracy. No API key was used.</p>
+  </section>
+
+  <footer>Interface concept for github.com/rhain-r/autonomous-saas-triager &middot; every ticket, log
+    line, code span, diff, and metric shown here is real output from the repository&rsquo;s offline run.</footer>
+</div>
+
+<script>
+const D = {
+  "TCK-3021": {
+    subject: "Cannot log in — page just keeps refreshing",
+    account: "Halberd Logistics", plan: "business", user: "usr_8812",
+    opened: "2026-08-14 09:31 UTC", channel: "email",
+    body: "I click Log in with Okta, it takes me to our company sign-in page, I put in my credentials and approve the push notification, and then it drops me straight back on the Meridian login page. It just loops. No error message at all. Two other people on my team are seeing the same thing.",
+    intent: "bug", confidence: 0.75, disposition: "escalate", severity: "critical", risk: 96,
+    finding: "The callback URL sent to Okta is built from the staging origin, so the token exchange is rejected and the browser is bounced back to /login — which immediately restarts the flow.",
+    anchor: "user usr_8812 appears in the cited events",
+    link: ["auth", "callback", "redirect", "staging", "uri"], strength: "1.00", blast: 4, events: 10,
+    logs: [
+      ["auth-svc-2026-08-14.log:3", "ERROR", "OAUTH_REDIRECT_MISMATCH", "usr_8812", "expected=app.meridian.io/auth/callback supplied=staging.meridian.io/auth/callback"],
+      ["auth-svc-2026-08-14.log:5", "ERROR", "OAUTH_REDIRECT_MISMATCH", "usr_8812", "expected=app.meridian.io/auth/callback supplied=staging.meridian.io/auth/callback"],
+      ["auth-svc-2026-08-14.log:7", "ERROR", "OAUTH_REDIRECT_MISMATCH", "usr_8812", "expected=app.meridian.io/auth/callback supplied=staging.meridian.io/auth/callback"],
+      ["auth-svc-2026-08-14.log:8", "ERROR", "OAUTH_REDIRECT_MISMATCH", "usr_9930", "same signature, unrelated account"],
+      ["auth-svc-2026-08-14.log:9", "ERROR", "OAUTH_REDIRECT_MISMATCH", "usr_1204", "same signature, unrelated account"],
+      ["auth-svc-2026-08-14.log:11", "ERROR", "OAUTH_REDIRECT_MISMATCH", "usr_7781", "same signature, unrelated account"]
+    ],
+    code: { loc: "src/auth/config.ts:39", src: "  redirectUri: `${STAGING_ORIGIN}/auth/callback`," },
+    commit: "9f4c1a7 · 2026-08-13 · d.okafor — refactor(auth): centralise origin resolution behind resolveOrigin() (PR #4471)",
+    challenge: null,
+    patch: [["meta","--- a/src/auth/config.ts"],["meta","+++ b/src/auth/config.ts"],["hunk","@@ -36,6 +36,7 @@"],["ctx","   clientSecret: readEnv(\"OKTA_CLIENT_SECRET\") ?? \"\","],["ctx","   tokenUrl: \"https://meridian.okta.com/oauth2/v1/token\","],["add","+  // TODO(triage): verified as the cited cause"],["ctx","   redirectUri: `${STAGING_ORIGIN}/auth/callback`,"],["ctx","   scopes: [\"openid\", \"profile\", \"email\", \"offline_access\"],"]],
+    patchNote: "Simulated patcher: marks the verified line rather than guessing a fix. It exercises the patch gate — anchor located, uniqueness checked, diff generated from the real before and after. With an API key the same gate receives Claude's actual fix.",
+    issue: "SUP-5353", priority: "Highest", components: "authentication",
+    reply: "Thanks for the detail in your report — it was enough to reproduce what you described.\n\nThis is a defect on our side rather than anything to do with your configuration. It's now with our engineering team under SUP-5353, and I'll come back to you here as soon as there's a fix to confirm.",
+    trace: [
+      ["search_error_logs", "user_id=usr_8812, window_hours=6", 3, ""],
+      ["read_log_window", "source_file=auth-svc-2026-08-14.log, line_no=3", 6, ""],
+      ["search_error_logs", "query=OAUTH_REDIRECT_MISMATCH, scope=blast-radius", 5, "4 distinct users"],
+      ["search_codebase", "query=OAUTH_REDIRECT_MISMATCH…, path_prefix=src/auth", 21, ""],
+      ["git_log", "path_prefix=src/auth", 3, ""],
+      ["search_docs", "query=Cannot log in - page just keeps refreshing", 3, ""],
+      ["read_file", "path=src/auth/callback.ts", 1, ""],
+      ["read_file", "path=src/auth/config.ts", 1, ""]
+    ],
+    notes: ["Classifier confidence <code>0.75</code> is below the <code>0.85</code> floor — recorded, not hidden."]
+  },
+
+  "TCK-7714": {
+    subject: "Dashboard is completely blank",
+    account: "Sable Consulting", plan: "team", user: "usr_6001",
+    opened: "2026-08-17 09:05 UTC", channel: "email",
+    body: "I log in fine but the dashboard is just white. Nothing loads at all, no widgets, no nav. It has been like this since this morning. Please fix urgently, we have a client review at 2pm.",
+    intent: "user_error", confidence: 0.50, disposition: "needs_human", severity: "low", risk: 0,
+    finding: "No server-side evidence connects this ticket to a code path. Either the failure is client-side or it was not logged.",
+    anchor: null, link: [], strength: "—", blast: 0, events: 0,
+    logs: [], code: null, commit: null, challenge: null, patch: null, issue: null,
+    reply: "Thanks for flagging this — I've had a look and I want a specialist on our side to take it from here rather than guess.\n\nOne thing that would speed this up: if you can send a screenshot of your browser console (F12, then Console) at the moment it happens, plus the exact time, that will tell us whether this is happening in the browser or on our end.",
+    trace: [
+      ["search_error_logs", "user_id=usr_6001, window_hours=6", 0, ""],
+      ["search_error_logs", "query=dashboard blank widgets…, scope=all-users", 0, "widened after no per-user failures"],
+      ["search_codebase", "query=dashboard blank…, path_prefix=src", 18, ""],
+      ["git_log", "path_prefix=src", 6, ""],
+      ["search_docs", "query=Dashboard is completely blank", 3, ""],
+      ["read_file", "path=src/platform/logger.ts", 1, ""]
+    ],
+    notes: [
+      "No log events and no code spans could be tied to this ticket.",
+      "Classifier confidence <code>0.50</code> is below the <code>0.85</code> floor."
+    ],
+    refusal: {
+      title: "Why this one is not answered",
+      body: "A blank dashboard renders client-side, so the server logs are clean and stay clean. An earlier build escalated this ticket at <b>critical</b> severity, risk 96/100, citing <code>src/api/client.ts</code> — using the previous day's password-reset failures from three unrelated accounts. Every citation in it was real. The log-to-code joint held. The chain was internally flawless and about somebody else entirely.",
+      body2: "Two changes came out of that: retrieval no longer widens to &ldquo;everything recent&rdquo; when a query matches nothing, and the chain grew a second joint that ties cited events back to <i>this</i> ticket. Both are pinned by tests."
+    }
+  },
+
+  "TCK-6033": {
+    subject: "Password reset link says it has expired",
+    account: "Nyland Health", plan: "team", user: "usr_4471",
+    opened: "2026-08-16 14:47 UTC", channel: "chat",
+    body: "I asked for a password reset and the email arrived within a few seconds. When I click the link it tells me the link has expired and to request a new one. I have tried three times now, including clicking it immediately after the email lands. I am not using SSO.",
+    intent: "bug", confidence: 0.75, disposition: "escalate", severity: "high", risk: 60,
+    finding: "Reset tokens are dying seconds after issue against a documented one-hour window. The TTL check compares an age in milliseconds against a constant in seconds.",
+    anchor: "user usr_4471 appears in the cited events",
+    link: ["expired", "reset", "token"], strength: "0.75", blast: 3, events: 8,
+    logs: [
+      ["auth-svc-2026-08-16.log:1", "INFO", "RESET_ISSUED", "usr_4471", "ttl=3600"],
+      ["auth-svc-2026-08-16.log:2", "WARN", "RESET_TOKEN_EXPIRED", "usr_4471", "ageMs=28625 — 28 seconds after issue"],
+      ["auth-svc-2026-08-16.log:4", "WARN", "RESET_TOKEN_EXPIRED", "usr_4471", "ageMs=18771"],
+      ["auth-svc-2026-08-16.log:6", "WARN", "RESET_TOKEN_EXPIRED", "usr_4471", "ageMs=9292"],
+      ["auth-svc-2026-08-16.log:7", "WARN", "RESET_TOKEN_EXPIRED", "usr_2287", "ageMs=7104"],
+      ["auth-svc-2026-08-16.log:8", "WARN", "RESET_TOKEN_EXPIRED", "usr_6642", "ageMs=11880"]
+    ],
+    code: { loc: "src/auth/reset.ts:38", src: "    logger.warn(\"reset token expired\", {" },
+    commit: "c0da915 · 2026-08-11 · d.okafor — feat(auth): add single-use password reset tokens (PR #4455)",
+    challenge: {
+      verdict: "overturned",
+      model: "gemini-2.5-pro",
+      text: "The same failure signature appears for 3 unrelated accounts and is emitted by src/auth/reset.ts. That is a defect, not a customer misunderstanding, and closing it would have lost it.",
+      scope: "49 log events and 15 source files examined"
+    },
+    patch: [["meta","--- a/src/auth/reset.ts"],["meta","+++ b/src/auth/reset.ts"],["hunk","@@ -35,6 +35,7 @@"],["ctx",""],["ctx","   const age = Date.now() - record.issuedAt;"],["ctx","   if (age > RESET_TOKEN_TTL_SECONDS) {"],["add","+    // TODO(triage): verified as the cited cause"],["ctx","     logger.warn(\"reset token expired\", {"],["ctx","       code: \"RESET_TOKEN_EXPIRED\","]],
+    patchNote: "The real fix is <code>age > RESET_TOKEN_TTL_SECONDS * 1000</code>; the repository's test suite drives exactly that proposal through this gate and asserts the generated diff reconstructs the intended file.",
+    issue: "SUP-4471", priority: "High", components: "authentication",
+    reply: "Thanks for the detail in your report — it was enough to reproduce what you described.\n\nThis is a defect on our side rather than anything to do with your configuration. It's now with our engineering team under SUP-4471, and I'll come back to you here as soon as there's a fix to confirm.",
+    trace: [
+      ["search_error_logs", "user_id=usr_4471, window_hours=6", 3, ""],
+      ["read_log_window", "source_file=auth-svc-2026-08-16.log, line_no=2", 5, ""],
+      ["search_error_logs", "query=RESET_TOKEN_EXPIRED, scope=blast-radius", 5, "3 distinct users"],
+      ["search_codebase", "query=RESET_ISSUED RESET_TOKEN_EXPIRED…, path_prefix=src/auth", 25, ""],
+      ["git_log", "path_prefix=src/auth", 3, ""],
+      ["search_docs", "query=Password reset link says it has expired", 3, ""],
+      ["read_file", "path=src/auth/reset.ts", 1, ""]
+    ],
+    notes: ["Classifier confidence <code>0.75</code> is below the <code>0.85</code> floor."],
+    rescue: {
+      title: "The ticket the challenger exists for",
+      body: "Under a weaker classifier this reads as a routine password question, and KB&#8209;0012 <i>&ldquo;Reset your Meridian password&rdquo;</i> matches its wording almost exactly. That article is not the answer — it is the specification the product is violating: it promises sixty minutes, and the logs show tokens dying in nine seconds.",
+      body2: "In the keyword-only configuration the investigator proposed closing this with the article. The challenger overturned it, and the ticket escalated at critical severity instead. That single overturn is the difference between two silent closures and one."
+    }
+  },
+
+  "TCK-5210": {
+    subject: "Export keeps failing, this is broken",
+    account: "Ardith Retail Group", plan: "business", user: "usr_7734",
+    opened: "2026-08-15 11:50 UTC", channel: "email",
+    body: "Every time I try to export our events table the download fails. I have tried three times this morning and it errors out every single time. This worked fine last quarter. Something in your last release has clearly broken CSV export and it is blocking our board pack.",
+    intent: "bug", confidence: 0.75, disposition: "escalate", severity: "medium", risk: 28,
+    finding: "src/exports/uploader.ts emits the rejection behind this failure.",
+    anchor: "user usr_7734 appears in the cited events",
+    link: ["over", "published"], strength: "0.50", blast: 1, events: 2,
+    logs: [
+      ["exports-svc-2026-08-15.log:2", "WARN", "EXPORT_TOO_LARGE", "usr_7734", "335544320 bytes exceeds 52428800"],
+      ["exports-svc-2026-08-15.log:4", "WARN", "EXPORT_TOO_LARGE", "usr_7734", "335544320 bytes exceeds 52428800"]
+    ],
+    code: { loc: "src/exports/uploader.ts:17", src: "    logger.warn(\"export rejected: over published limit\", {" },
+    commit: "a5f2c64 · 2026-07-29 · m.reyes — chore(exports): publish the 50MB ceiling in the rejection message (PR #4388)",
+    challenge: null, patch: null, issue: "SUP-2761", priority: "Medium", components: "exports",
+    reply: "Thanks for the detail in your report — it was enough to reproduce what you described.\n\nThis is a defect on our side rather than anything to do with your configuration. It's now with our engineering team under SUP-2761, and I'll come back to you here as soon as there's a fix to confirm.",
+    trace: [
+      ["search_error_logs", "user_id=usr_7734, window_hours=6", 2, ""],
+      ["read_log_window", "source_file=exports-svc-2026-08-15.log, line_no=2", 4, ""],
+      ["search_error_logs", "query=EXPORT_TOO_LARGE, scope=blast-radius", 2, "1 distinct user"],
+      ["search_codebase", "query=EXPORT_TOO_LARGE…, path_prefix=src/exports", 14, ""],
+      ["search_docs", "query=Export keeps failing, this is broken", 3, ""],
+      ["read_file", "path=src/exports/uploader.ts", 1, ""]
+    ],
+    notes: ["Classifier confidence <code>0.75</code> is below the <code>0.85</code> floor."],
+    wrong: {
+      title: "This decision is wrong, and the system cannot tell",
+      body: "A 320 MB export against a documented 50 MB ceiling. The product worked correctly; the answer is KB&#8209;0031, not a Jira ticket. The classifier read <i>&ldquo;broken&rdquo;</i>, <i>&ldquo;failing&rdquo;</i> and <i>&ldquo;worked fine last quarter&rdquo;</i> as defect signals.",
+      body2: "The evidence gate cannot contradict it, because the chain is <b>genuine</b> — <code>uploader.ts</code> really is the code that emitted the rejection. This is the clearest demonstration of what the gate does and does not do: it proves <b>attribution</b>, never <b>defectiveness</b>. Only a challenge on the escalation direction would catch it, and that is deliberately unbuilt — escalation errors are recoverable, closure errors are not."
+    }
+  },
+
+  "TCK-4488": {
+    subject: "We were billed twice this month",
+    account: "Colwyn Foods", plan: "business", user: "usr_2290",
+    opened: "2026-08-15 08:15 UTC", channel: "email",
+    body: "Our card was charged 249.00 twice on 15 August, about thirty seconds apart. Both show as settled on our statement, not pending. Invoice list only shows one invoice for the period. Please refund the duplicate.",
+    intent: "bug", confidence: 0.75, disposition: "escalate", severity: "high", risk: 52,
+    finding: "Stripe retried the delivery after the receipt call timed out, and applyCharge() has no idempotency check, so the ledger took the credit twice.",
+    anchor: "user usr_2290 appears in the cited events",
+    link: ["ledger", "reference"], strength: "0.50", blast: 1, events: 6,
+    logs: [
+      ["billing-svc-2026-08-15.log:1", "INFO", "BILLING_EVENT", "—", "evt_1PkA22XrmQ charge.succeeded"],
+      ["billing-svc-2026-08-15.log:3", "WARN", "MAIL_DEFERRED", "—", "upstream timeout after 5000ms — Stripe never saw a 2xx"],
+      ["billing-svc-2026-08-15.log:4", "INFO", "BILLING_EVENT", "—", "evt_1PkA22XrmQ charge.succeeded — same event id, 30s later"],
+      ["billing-svc-2026-08-15.log:7", "ERROR", "LEDGER_DUPLICATE", "usr_2290", "reference=ch_3PkA22XrmQ counted=2 expected=1"]
+    ],
+    code: { loc: "src/billing/ledger.ts:23", src: "    await store.put(`ledger:reversal:${reference}`, { reference, at: Date.now() });" },
+    commit: "e13b806 · 2026-08-06 · s.lindqvist — feat(billing): handle charge.refunded webhooks (PR #4410)",
+    challenge: null, patch: null, issue: "SUP-8807", priority: "High", components: "billing",
+    reply: "Thanks for the detail in your report — it was enough to reproduce what you described.\n\nThis is a defect on our side rather than anything to do with your configuration. It's now with our engineering team under SUP-8807, and I'll come back to you here as soon as there's a fix to confirm.",
+    trace: [
+      ["search_error_logs", "user_id=usr_2290, window_hours=6", 1, ""],
+      ["read_log_window", "source_file=billing-svc-2026-08-15.log, line_no=7", 7, "the INFO lines the error omits"],
+      ["search_error_logs", "query=LEDGER_DUPLICATE, scope=blast-radius", 1, "1 distinct user"],
+      ["search_codebase", "query=LEDGER_DUPLICATE…, path_prefix=src/billing", 19, ""],
+      ["git_log", "path_prefix=src/billing", 1, ""],
+      ["read_file", "path=src/billing/ledger.ts", 1, ""]
+    ],
+    notes: [
+      "Cited <code>src/billing/ledger.ts</code>; the answer key names <code>src/billing/webhook.ts</code>. Scored <b>related</b>, not correct.",
+      "Only one account is affected, which is the challenger's known blind spot."
+    ],
+    wrong: {
+      title: "Right call, wrong file — and a blind spot",
+      body: "The escalation is correct: this is a real duplicate charge. But the cited file is the ledger, which faithfully recorded what it was told twice; the missing idempotency check is in <code>webhook.ts</code>. The eval scores this <b>related</b> rather than rounding it up to correct.",
+      body2: "It also affects exactly one account, and the challenger's signal is &ldquo;the same failure across unrelated accounts&rdquo;. Under the keyword-only classifier this ticket is closed and nothing rescues it. It is the one silent closure the architecture still allows."
+    }
+  },
+
+  "TCK-9302": {
+    subject: "API returns 429 constantly since Monday",
+    account: "Brightlow Analytics", plan: "business", user: "usr_5510",
+    opened: "2026-08-17 08:30 UTC", channel: "email",
+    body: "Our nightly report job has started failing. We get 429 rate limited almost immediately and then the whole job dies. We have not changed our code and we are nowhere near 600 requests a minute in aggregate — the job only pulls three reports. Your rate limiter looks like it is counting wrong.",
+    intent: "bug", confidence: 0.75, disposition: "escalate", severity: "high", risk: 52,
+    finding: "src/api/rate_limit.ts is cited as the source of the throttling.",
+    anchor: "user usr_5510 appears in the cited events",
+    link: ["after", "rate", "retry"], strength: "0.75", blast: 1, events: 12,
+    logs: [
+      ["api-svc-2026-08-17.log:2", "WARN", "RATE_LIMITED", "usr_5510", "count=601 window=60"],
+      ["api-svc-2026-08-17.log:3", "WARN", "UPSTREAM_RETRY", "usr_5510", "retry_attempt=1 — 3ms after the 429"],
+      ["api-svc-2026-08-17.log:10", "WARN", "UPSTREAM_RETRY", "usr_5510", "retry_attempt=8 — all eight inside 52ms"],
+      ["api-svc-2026-08-17.log:11", "ERROR", "UPSTREAM_EXHAUSTED", "usr_5510", "request failed after 8 attempts"],
+      ["api-svc-2026-08-17.log:12", "WARN", "RATE_LIMITED", "usr_5510", "count=642 — the retries consumed the next window too"]
+    ],
+    code: { loc: "src/api/rate_limit.ts:18", src: "export async function checkRateLimit(apiKey: string): Promise<{ allowed: boolean; retryAfter: number }> {" },
+    commit: "77ae4d2 · 2026-08-09 · m.reyes — feat(api): retry retryable upstream statuses in the report worker (PR #4432)",
+    challenge: null, patch: null, issue: "SUP-6109", priority: "High", components: "public-api",
+    reply: "Thanks for the detail in your report — it was enough to reproduce what you described.\n\nThis is a defect on our side rather than anything to do with your configuration. It's now with our engineering team under SUP-6109, and I'll come back to you here as soon as there's a fix to confirm.",
+    trace: [
+      ["search_error_logs", "user_id=usr_5510, window_hours=6", 11, ""],
+      ["read_log_window", "source_file=api-svc-2026-08-17.log, line_no=2", 6, ""],
+      ["search_error_logs", "query=RATE_LIMITED, scope=blast-radius", 2, "1 distinct user"],
+      ["search_codebase", "query=RATE_LIMITED UPSTREAM_RETRY…, path_prefix=src/api", 22, ""],
+      ["git_log", "path_prefix=src/api", 1, ""],
+      ["read_file", "path=src/api/rate_limit.ts", 1, ""],
+      ["read_file", "path=src/api/client.ts", 1, ""]
+    ],
+    notes: ["Cited <code>src/api/rate_limit.ts</code>; the answer key names <code>src/api/client.ts</code>. Scored <b>wrong</b>."],
+    wrong: {
+      title: "The misattribution trap, and it walked into it",
+      body: "The customer blames the rate limiter, and <code>rate_limit.ts</code> is the obvious-looking culprit. It is also correct code: 600 requests per minute, enforced exactly as documented.",
+      body2: "The cause is in <code>client.ts</code>, which retries a 429 <b>immediately</b> — no delay, no jitter — so one rate-limited burst replays eight times inside the same fixed window and exhausts the next one too. The logs show all eight attempts inside 52 milliseconds. Escalating this ticket is easy; escalating it with the right file is not, and sending a developer to correct code is a real cost the eval records as <b>wrong</b>."
+    }
+  },
+
+  "TCK-1102": {
+    subject: "How do I change my password?",
+    account: "Perrin & Vale", plan: "team", user: "usr_3345",
+    opened: "2026-08-14 09:40 UTC", channel: "chat",
+    body: "Hi, I want to update my password because I am rotating credentials for a security review. I could not find the option in settings. Can you point me to where it is?",
+    intent: "how_to", confidence: 0.80, disposition: "resolve", severity: "low", risk: 0,
+    finding: "A genuine how-to. KB-0012 answers it, and no claim about product behaviour is being made.",
+    anchor: null, link: [], strength: "—", blast: 0, events: 0,
+    logs: [], code: null, commit: null,
+    challenge: { verdict: "upheld", model: "gemini-2.5-pro", text: "0 matching failures across 0 accounts — below the threshold at which this stops looking like one customer's situation and starts looking like a defect.", scope: "Challenged because closing a ticket is the decision with no second chance" },
+    patch: null, issue: null,
+    reply: "Happy to help with this.\n\nReset links are available from the login screen under Forgot password, and they stay valid for sixty minutes. The full steps are in Reset your Meridian password (KB-0012).\n\nIf that doesn't match what you're seeing, reply here and I'll pick it straight back up.",
+    trace: [
+      ["search_error_logs", "user_id=usr_3345, window_hours=6", 0, ""],
+      ["search_error_logs", "query=change password settings…, scope=all-users", 0, "widened after no per-user failures"],
+      ["search_docs", "query=How do I change my password?", 3, "KB-0012 scored 27.0"],
+      ["search_codebase", "query=password settings…, path_prefix=src/auth", 9, ""]
+    ],
+    notes: ["<code>how_to</code> and <code>feature_request</code> are the only intents answerable from the knowledge base alone — neither makes a claim about how the product behaved."]
+  },
+
+  "TCK-8890": {
+    subject: "Please add a dark mode",
+    account: "Tessin Media", plan: "team", user: "usr_9120",
+    opened: "2026-08-17 13:20 UTC", channel: "chat",
+    body: "Our analysts live in Meridian eight hours a day and the white background is rough on the eyes. Every other tool we use has a dark theme. Is one on the roadmap? Happy to beta test.",
+    intent: "feature_request", confidence: 0.90, disposition: "resolve", severity: "low", risk: 0,
+    finding: "A feature request. Nothing is broken, and there is nothing to investigate.",
+    anchor: null, link: [], strength: "—", blast: 0, events: 0,
+    logs: [], code: null, commit: null,
+    challenge: { verdict: "upheld", model: "gemini-2.5-pro", text: "0 matching failures across 0 accounts — below the threshold at which this stops looking like one customer's situation and starts looking like a defect.", scope: "Upholding a correct resolution is a success, not a failure to find something" },
+    patch: null, issue: null,
+    reply: "Happy to help with this.\n\nA dark theme isn't available today, and I've passed your note to the product team along with your offer to beta test — that's genuinely useful to them.\n\nIf that doesn't match what you're seeing, reply here and I'll pick it straight back up.",
+    trace: [
+      ["search_error_logs", "user_id=usr_9120, window_hours=6", 0, ""],
+      ["search_docs", "query=Please add a dark mode", 2, ""],
+      ["search_codebase", "query=dark mode theme…, path_prefix=src", 4, ""]
+    ],
+    notes: ["Scored 0 risk deliberately: a well-answered request must never outrank a real fault in the queue."]
+  }
+};
+
+const ORDER = ["TCK-3021","TCK-6033","TCK-4488","TCK-9302","TCK-5210","TCK-7714","TCK-1102","TCK-8890"];
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const label = d => d.replace("_"," ");
+
+function renderQueue(active) {
+  document.getElementById("queue").innerHTML = ORDER.map(id => {
+    const c = D[id];
+    return `<button class="row" role="listitem" data-id="${id}" aria-current="${id===active}">
+      <span class="stripe ${c.disposition}"></span>
+      <span class="row-body">
+        <span class="row-id">${id}</span>
+        <span class="row-subj">${esc(c.subject)}</span>
+        <span class="row-acct">${esc(c.account)} · ${c.plan}</span>
+      </span>
+      <span class="row-risk ${c.risk >= 70 ? "hot" : ""}">${c.risk || "—"}</span>
+    </button>`;
+  }).join("");
+  document.querySelectorAll(".row").forEach(b =>
+    b.addEventListener("click", () => select(b.dataset.id)));
+}
+
+function chainBlock(c) {
+  const linked = c.link.length > 0 && c.anchor;
+  const j1 = c.anchor
+    ? `<div class="joint"><div class="joint-rail"></div><div class="joint-proof">
+         <div class="joint-label">Joint 1 · ticket → logs · holds</div>
+         <div class="joint-text"><span class="lit">${esc(c.anchor)}</span></div></div></div>`
+    : `<div class="joint broken"><div class="joint-rail"></div><div class="joint-proof">
+         <div class="joint-label">Joint 1 · ticket → logs · severed</div>
+         <div class="joint-text">No log event carries this customer's id or shares vocabulary with what they wrote.</div></div></div>`;
+
+  const j2 = c.link.length
+    ? `<div class="joint"><div class="joint-rail"></div><div class="joint-proof">
+         <div class="joint-label">Joint 2 · logs → code · holds · strength ${c.strength}</div>
+         <div class="joint-text">Shared diagnostic terms, computed by intersecting the error signature with the cited source:<br>
+         ${c.link.map(t=>`<span class="term">${t}</span>`).join(" ")}</div></div></div>`
+    : `<div class="joint broken"><div class="joint-rail"></div><div class="joint-proof">
+         <div class="joint-label">Joint 2 · logs → code · severed</div>
+         <div class="joint-text">Nothing to intersect — no code span was cited.</div></div></div>`;
+
+  const logsNode = c.logs.length ? `
+    <div class="node"><div class="node-head"><span>Logs · ${c.events} events cited</span><span>${c.blast} account${c.blast===1?"":"s"} affected</span></div>
+    <div class="node-body scroll"><table class="logs">
+      <thead><tr><th>Locator</th><th>Level</th><th>Code</th><th>User</th><th>Detail</th></tr></thead>
+      <tbody>${c.logs.map(([loc,lvl,code,user,msg])=>`<tr>
+        <td class="loc">${loc}</td>
+        <td class="lvl ${lvl==="WARN"?"warn":lvl==="INFO"?"":""}"${lvl==="INFO"?' style="color:var(--muted)"':""}>${lvl}</td>
+        <td>${code}</td><td class="u">${user}</td><td class="msg">${esc(msg)}</td></tr>`).join("")}
+      </tbody></table></div></div>`
+    : `<div class="node"><div class="node-head"><span>Logs</span><span>none recorded</span></div>
+       <div class="node-body"><span style="color:var(--muted);font-size:13.5px">No failure was logged for this customer in the window. The absence is the finding.</span></div></div>`;
+
+  const codeNode = c.code ? `
+    <div class="node"><div class="node-head"><span>Code · verified against the file</span></div>
+    <div class="node-body"><span class="loc">${c.code.loc}</span><pre>${esc(c.code.src)}</pre>
+    ${c.commit?`<div style="margin-top:9px;font-family:var(--mono);font-size:11.5px;color:var(--muted)">${esc(c.commit)}</div>`:""}</div></div>`
+    : `<div class="node"><div class="node-head"><span>Code</span><span>nothing cited</span></div>
+       <div class="node-body"><span style="color:var(--muted);font-size:13.5px">Source is not shown when there is no failure for it to explain — code with nothing to attach it to is raw material for an invention.</span></div></div>`;
+
+  return `<div class="chain">
+    <div class="node"><div class="node-head"><span>Ticket</span><span>${c.user}</span></div>
+      <div class="node-body" style="font-size:13.5px;color:var(--muted)">${esc(c.subject)}</div></div>
+    ${j1}${logsNode}${j2}${codeNode}
+    <div style="margin-top:14px;font-size:13.5px;color:var(--muted)">
+      ${linked
+        ? `Both joints hold, so this chain can support an escalation.`
+        : `A joint is severed, so this chain <b style="color:var(--hold)">cannot</b> support an escalation or a closure. Routed to a human — never discarded.`}
+    </div></div>`;
+}
+
+function select(id) {
+  const c = D[id];
+  const box = document.getElementById("case");
+  const p = arr => arr.map(([k,v])=>`<span class="${k==="add"?"add":k==="del"?"del":k==="hunk"?"hunk":k==="meta"?"meta":""}">${esc(v)}</span>`).join("\n");
+
+  box.innerHTML = `<article class="case">
+    <div class="case-head">
+      <div class="case-meta"><span>${id}</span><span>${c.account} · ${c.plan}</span><span>${c.user}</span><span>opened ${c.opened}</span><span>via ${c.channel}</span></div>
+      <h2>${esc(c.subject)}</h2>
+      <div class="verdict">
+        <span class="chip ${c.disposition}">${label(c.disposition)}</span>
+        <span class="chip plain">intent ${c.intent}</span>
+        <span class="chip plain">severity ${c.severity}</span>
+        <span class="chip plain">risk ${c.risk}/100</span>
+        <span class="chip plain">confidence ${c.confidence.toFixed(2)}</span>
+        ${c.issue?`<span class="chip plain">${c.issue} · ${c.priority}</span>`:""}
+      </div>
+      <p class="quote">${esc(c.body)}</p>
+    </div>
+
+    <div class="sect"><h3>Finding</h3><p class="finding">${esc(c.finding)}</p></div>
+
+    ${c.wrong?`<div class="sect"><div class="callout"><h4>${c.wrong.title}</h4><p>${c.wrong.body}</p><p>${c.wrong.body2}</p></div></div>`:""}
+    ${c.refusal?`<div class="sect"><div class="callout"><h4>${c.refusal.title}</h4><p>${c.refusal.body}</p><p>${c.refusal.body2}</p></div></div>`:""}
+    ${c.rescue?`<div class="sect"><div class="callout good"><h4>${c.rescue.title}</h4><p>${c.rescue.body}</p><p>${c.rescue.body2}</p></div></div>`:""}
+
+    <div class="sect"><h3>Evidence chain</h3>${chainBlock(c)}</div>
+
+    ${c.challenge?`<div class="sect"><h3>Adversarial challenge</h3>
+      <div class="callout ${c.challenge.verdict==="upheld"?"good":""}">
+        <h4>${c.challenge.verdict} · ${c.challenge.model}</h4>
+        <p>${esc(c.challenge.text)}</p>
+        <p style="color:var(--muted);font-size:12.5px">${esc(c.challenge.scope)}</p>
+      </div></div>`:""}
+
+    ${c.patch?`<div class="sect"><h3>Candidate patch</h3>
+      <pre class="diff">${p(c.patch)}</pre>
+      <p style="margin:11px 0 0;font-size:13px;color:var(--muted)">${c.patchNote}</p></div>`:""}
+
+    <div class="sect"><h3>Reply to the customer</h3><div class="reply">${esc(c.reply)}</div></div>
+
+    <div class="sect"><h3>Tool trace · ${c.trace.length} calls, none by a model</h3>
+      <ol class="trace">${c.trace.map(([t,a,n,note])=>`<li><span class="tool">${t}</span><span class="args">${esc(a)}${note?` — ${esc(note)}`:""}</span><span class="count">${n}</span></li>`).join("")}</ol></div>
+
+    <div class="sect"><h3>Notes carried into the report</h3><ul class="notes">${c.notes.map(n=>`<li>${n}</li>`).join("")}</ul></div>
+  </article>`;
+
+  renderQueue(id);
+}
+
+renderQueue("TCK-3021");
+select("TCK-3021");
+</script>
