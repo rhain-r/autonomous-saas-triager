@@ -10,19 +10,6 @@ customer, that the system cannot quote.**
 
 ---
 
-## Why This Matters:
-
-* **Escalations arrive with evidence, not opinions.** Every log line and every
-  line of code in a raised issue was verified against the file it names before
-  the issue existed.
-* **Real defects stop getting closed.** Every proposed auto-close is challenged
-  by a second model from a different lab, with the burden of proof inverted.
-* **Auditable and mostly deterministic.** Retrieval, citation checking, severity,
-  risk scoring, and patch validation are plain Python. Only the reasoning is a
-  model.
-
----
-
 ## The problem
 
 An L1 triage agent produces two outputs that cost real money: an **escalation**,
@@ -52,19 +39,14 @@ from a different lab, has tried and failed to prove a defect is there.
 
 ![Two runs: an escalation with verified evidence, and a refusal](assets/demo.svg)
 
-Try it out! (no API key required):
 
-```bash
-uv run triage run TCK-3021 --simulate --verbose
-uv run triage run TCK-7714 --simulate
-```
-
-## Interface Demonstration (Click for better visual experience)
+## Try it out!
 
 | [Live &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/showcase.html) | A guided walkthrough  |
 | --- | --- |
 | [Console &rarr;](https://rhain-r.github.io/autonomous-saas-triager/assets/console.html) | The work behind the scene |
 
+---
 
 ## Architecture
 
@@ -148,66 +130,9 @@ uv run triage run TCK-7714 --simulate
     raises on logically impossible combinations. Closing a confirmed defect is
     not a judgement call the system is allowed to make.
 
-### What it is worth investigating?
-
-`agent/sandbox/` is a simulated production estate made of **real files**, not
-mocks: a small TypeScript service tree, service logs in the format its own logger
-emits, help-centre articles, and an eight-ticket inbox. `search_codebase()` greps
-a real tree, `cite_code()` verifies against real bytes, and a line number in a
-report is one you can open.
-
-Four genuine defects are planted in it — an OAuth redirect built from the staging
-origin, a reset-token TTL comparing milliseconds against seconds, a Stripe
-webhook with no idempotency check, a retry loop with no backoff. None of them is
-labelled with a comment. A bug you can grep for tests nothing.
-
----
-
-## Repository layout
-
-```
-agent/
-├── schemas.py        message contracts — the architecture lives here
-├── config.py         models, keys, limits, paths; nothing hardcoded elsewhere
-├── llm.py            ModelClient protocol + provider adapters
-├── triage_agent.py   the loop: classify, gather, hypothesise, verify, route
-├── evidence.py       citation checking and the two link joints  (no LLM calls)
-├── challenger.py     the adversarial check on every auto-close
-├── patcher.py        anchor location, uniqueness, diff generation (no LLM calls)
-├── reporter.py       scoring, tracker payloads, rendering        (no LLM calls)
-├── code_tools.py     search_codebase, read_file, cite_code, git_log
-├── tools/            logs.py, kb.py, tracker.py                  (no LLM calls)
-├── prompts/          *.md system prompts, on disk so they show up in diffs
-├── sandbox/          repo/ · logs/ · kb/ · tickets/ — the simulated estate
-├── evals/            golden keys, deterministic stand-ins, scoring harness
-└── tests/            132 tests, all against stubbed clients
-assets/               architecture · demo
-docs/                 architecture · agent-tools · setup-guide · build-plan
-```
-
 ---
 
 ## Evaluation
-
-Eight tickets, each with a hand-written answer key recording the correct intent,
-the correct disposition, and — where there is one — the file that actually
-causes the defect. Five of the eight are traps: a false escalation, a silent
-closure, a misattribution, a ticket with no evidence at all, and a defect that
-affects exactly one account.
-
-```bash
-uv run python -m agent.evals.run
-```
-
-> **What these numbers are.** No API keys were used. The agents are deterministic
-> lexical stand-ins, so this measures **pipeline behaviour** — the evidence gate,
-> the challenge routing, the patch gate, all real code — and **not** model
-> accuracy. Swapping in Claude and Gemini would produce different numbers, and
-> those would be the ones worth quoting about models. The stand-ins never read an
-> answer key.
-
-The positive class is *"this is a real defect and must reach engineering"*, so a
-false positive is telling a developer to investigate something that works.
 
 | Classifier | Closure policy | P | R | F1 | FP | **Silent closures** | Right file |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -216,47 +141,6 @@ false positive is telling a developer to investigate something that works.
 | Signal-aware | closes unguarded | 0.800 | 1.000 | 0.889 | 1 | **0** | 2/4 |
 | Signal-aware | **+ challenger** | 0.800 | 1.000 | 0.889 | 1 | **0** | 2/4 |
 
-**Silent closures is the column that matters** — defects that were answered with
-a help article and shut, where no human will ever look again. A false negative
-that reaches a human is expensive and safe; one that gets closed is neither.
-
-**1 overturn, 1 correct, 0 incorrect.** The challenger never once escalated a
-ticket that was genuinely working as designed — the failure mode that would make
-verification worse than useless.
-
-### What my evaluation actually found
-
-**1. The challenger halves silent closures, and its lift depends entirely on the
-classifier.** Against a keyword-only classifier it rescued one of two closed
-defects. Against a classifier that also notices a customer quoting the product's
-own promise back at it, there was nothing left to rescue. Actionable conclusion:
-*invest in intake first.* Verification is the safety net for what classification
-misses, not a substitute for doing it well.
-
-**2. The unrescued defect is the challenger's structural blind spot.**
-`TCK-4488` is a duplicate Stripe charge caused by a missing idempotency check. It
-affects exactly one account — and the challenger's signal is "the same failure
-across unrelated accounts". One customer with one duplicate charge is
-indistinguishable from one confused customer, and nothing in this architecture
-currently tells them apart.
-
-**3. One false escalation survives every configuration.** `TCK-5210` is a 320 MB
-export against a documented 50 MB limit. The classifier reads "broken" and
-"worked fine last quarter" as defect signals, and the evidence gate *cannot
-contradict it* — the chain is genuine, because `src/exports/uploader.ts` really
-is the code that emitted the rejection. **This is the clearest demonstration of
-what the evidence gate does and does not do:** it proves attribution, never
-defectiveness. Only a challenge on the escalation direction catches this, and
-that is deliberately not built — see below.
-
-**4. Attribution is weaker than detection.** The pipeline escalates the right
-tickets and names the right file 2 times in 4. `TCK-9302` is escalated citing
-`src/api/rate_limit.ts` — correct code — when the cause is the un-delayed retry
-loop in `src/api/client.ts`. Sending a developer to the wrong file is a smaller
-failure than not sending them at all, and the scorer reports it as `wrong` rather
-than rounding it up.
-
-Raw results: [`agent/evals/results/`](agent/evals/results/).
 
 ---
 
