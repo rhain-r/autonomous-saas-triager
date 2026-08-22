@@ -185,9 +185,7 @@ assets/               architecture · demo
 docs/                 architecture · agent-tools · setup-guide · build-plan
 ```
 
-Roughly three-quarters of the system is deterministic Python. Everything that
-*can* be a tested function instead of a prompt, is one — which is why the whole
-suite runs in under four seconds with no API key and no cost.
+---
 
 ## Evaluation
 
